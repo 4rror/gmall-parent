@@ -18,7 +18,7 @@
 
     <groupId>com.atguigu.gmall</groupId>
     <artifactId>gmall-parent</artifactId>
-    <version>1.0</version>
+    <version>1.0.0-SNAPSHOT</version>
 
     <!--定义jar包的版本号-->
     <properties>
@@ -27,7 +27,7 @@
         <alibaba.version>2.2.5.RELEASE</alibaba.version>
         <gmall.version>1.0</gmall.version>
         <mybatis-plus.version>3.4.1</mybatis-plus.version>
-        <mysql.version>5.1.46</mysql.version>
+        <mysql.version>8.0.25</mysql.version>
         <swagger.version>2.7.0</swagger.version>
         <lombok.version>1.18.10</lombok.version>
         <fastjson.version>1.2.29</fastjson.version>
@@ -110,6 +110,5 @@
                 <version>${httpclient.version}</version>
             </dependency>
         </dependencies>
-
     </dependencyManagement>
 </project>
