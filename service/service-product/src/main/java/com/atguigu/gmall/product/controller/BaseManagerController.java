@@ -1,17 +1,13 @@
 package com.atguigu.gmall.product.controller;
 
 import com.atguigu.gmall.common.result.Result;
-import com.atguigu.gmall.model.product.BaseAttrInfo;
-import com.atguigu.gmall.model.product.BaseCategory1;
-import com.atguigu.gmall.model.product.BaseCategory2;
-import com.atguigu.gmall.model.product.BaseCategory3;
+import com.atguigu.gmall.model.product.*;
+import com.atguigu.gmall.product.service.BaseAttrInfoService;
+import com.atguigu.gmall.product.service.BaseAttrValueService;
 import com.atguigu.gmall.product.service.BaseManagerService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,6 +17,32 @@ public class BaseManagerController {
 
     @Autowired
     private BaseManagerService baseManagerService;
+
+    @Autowired
+    private BaseAttrInfoService baseAttrInfoService;
+
+    @Autowired
+    private BaseAttrValueService baseAttrValueService;
+
+    /**
+     * 根据平台属性Id 获取到平台属性值集合
+     */
+    @ApiOperation("根据平台属性Id 获取到平台属性值集合")
+    @GetMapping("/getAttrValueList/{attrId}")
+    public Result<List<BaseAttrValue>> getAttrValueList(@PathVariable Long attrId) {
+        List<BaseAttrValue> baseAttrValueList = baseAttrValueService.getAttrValueListById(attrId);
+        return Result.ok(baseAttrValueList);
+    }
+
+    /**
+     * 保存-修改平台属性
+     */
+    @ApiOperation("保存或修改平台属性")
+    @PostMapping("/saveAttrInfo")
+    public Result<Object> saveAttrInfo(@RequestBody BaseAttrInfo baseAttrInfo) {
+        baseAttrInfoService.saveAttrInfo(baseAttrInfo);
+        return Result.ok();
+    }
 
     /**
      * 根据分类Id获取平台属性集合
