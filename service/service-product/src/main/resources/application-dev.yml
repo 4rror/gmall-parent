@@ -12,7 +12,6 @@ spring:
     url: jdbc:mysql://192.168.56.101:3306/gmall_product
   redis:
     host: 192.168.56.101
-    password:
     database: 0
     port: 6379
   zipkin:
