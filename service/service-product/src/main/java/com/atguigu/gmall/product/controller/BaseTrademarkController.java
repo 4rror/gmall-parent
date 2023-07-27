@@ -17,6 +17,7 @@ public class BaseTrademarkController {
 
     /**
      * 删除BaseTrademark
+     * TODO 删除前确保没有分类对此品牌引用，或者同时删除品牌引用
      */
     @ApiOperation("删除BaseTrademark")
     @DeleteMapping("/remove/{id}")
