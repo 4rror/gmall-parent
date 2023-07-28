@@ -10,7 +10,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -54,7 +53,6 @@ public class BaseCategoryTrademarkServiceImpl extends ServiceImpl<BaseCategoryTr
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void saveBaseCategoryTrademark(CategoryTrademarkVo categoryTrademarkVo) {
         Long category3Id = categoryTrademarkVo.getCategory3Id();
         List<Long> trademarkIdList = categoryTrademarkVo.getTrademarkIdList();
