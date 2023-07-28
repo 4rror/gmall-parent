@@ -9,6 +9,9 @@ import com.atguigu.gmall.product.mapper.SkuImageMapper;
 import com.atguigu.gmall.product.mapper.SkuInfoMapper;
 import com.atguigu.gmall.product.mapper.SkuSaleAttrValueMapper;
 import com.atguigu.gmall.product.service.SkuInfoService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +34,7 @@ public class SkuInfoServiceImpl implements SkuInfoService {
     @Autowired
     private SkuImageMapper skuImageMapper;
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void saveSkuInfo(SkuInfo skuInfo) {
         // 保存skuInfo
@@ -64,5 +67,47 @@ public class SkuInfoServiceImpl implements SkuInfoService {
                 skuImageMapper.insert(skuImage);
             });
         }
+    }
+
+    @Override
+    public IPage<SkuInfo> getSkuInfoPage(Long page, Long limit) {
+        IPage<SkuInfo> skuInfoPage = skuInfoMapper.selectPage(new Page<>(page, limit), null);
+
+        // 封装结果
+        // List<SkuInfo> records = skuInfoPage.getRecords();
+        //
+        // records.forEach(skuInfo -> {
+        //     // 封装skuAttrValueList
+        //     List<SkuAttrValue> skuAttrValueList = skuAttrValueMapper.selectList(new LambdaQueryWrapper<SkuAttrValue>().eq(SkuAttrValue::getSkuId, skuInfo.getId()));
+        //     skuInfo.setSkuAttrValueList(skuAttrValueList);
+        //
+        //     // 封装skuSaleAttrValueList
+        //     List<SkuSaleAttrValue> skuSaleAttrValueList = skuSaleAttrValueMapper.selectList(new LambdaQueryWrapper<SkuSaleAttrValue>().eq(SkuSaleAttrValue::getSkuId, skuInfo.getId()));
+        //     skuInfo.setSkuSaleAttrValueList(skuSaleAttrValueList);
+        //
+        //     // 封装skuImageList
+        //     List<SkuImage> skuImageList = skuImageMapper.selectList(new LambdaQueryWrapper<SkuImage>().eq(SkuImage::getSkuId, skuInfo.getId()));
+        //     skuInfo.setSkuImageList(skuImageList);
+        // });
+
+        return skuInfoPage;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void onSale(Long skuId) {
+        SkuInfo skuInfo = new SkuInfo();
+        skuInfo.setId(skuId);
+        skuInfo.setIsSale(1);
+        skuInfoMapper.updateById(skuInfo);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void cancelSale(Long skuId) {
+        SkuInfo skuInfo = new SkuInfo();
+        skuInfo.setId(skuId);
+        skuInfo.setIsSale(0);
+        skuInfoMapper.updateById(skuInfo);
     }
 }

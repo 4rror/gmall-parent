@@ -6,6 +6,7 @@ import com.atguigu.gmall.model.product.SpuImage;
 import com.atguigu.gmall.model.product.SpuSaleAttr;
 import com.atguigu.gmall.product.service.BaseManagerService;
 import com.atguigu.gmall.product.service.SkuInfoService;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,36 @@ public class SkuManageController {
 
     @Autowired
     private SkuInfoService skuInfoService;
+
+    /**
+     * 下架sku
+     */
+    @ApiOperation("下架sku")
+    @GetMapping("/cancelSale/{skuId}")
+    public Result<Object> cancelSale(@PathVariable Long skuId) {
+        skuInfoService.cancelSale(skuId);
+        return Result.ok();
+    }
+
+    /**
+     * 上架sku
+     */
+    @ApiOperation("上架sku")
+    @GetMapping("/onSale/{skuId}")
+    public Result<Object> onSale(@PathVariable Long skuId) {
+        skuInfoService.onSale(skuId);
+        return Result.ok();
+    }
+
+    /**
+     * sku分页列表
+     */
+    @ApiOperation("sku分页列表")
+    @GetMapping("/list/{page}/{limit}")
+    public Result<IPage<SkuInfo>> getSkuInfoPage(@PathVariable Long page, @PathVariable Long limit) {
+        IPage<SkuInfo> skuInfoIPage = skuInfoService.getSkuInfoPage(page, limit);
+        return Result.ok(skuInfoIPage);
+    }
 
     /**
      * 保存SkuInfo
