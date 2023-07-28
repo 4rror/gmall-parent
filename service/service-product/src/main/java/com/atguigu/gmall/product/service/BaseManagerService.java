@@ -1,9 +1,6 @@
 package com.atguigu.gmall.product.service;
 
-import com.atguigu.gmall.model.product.BaseAttrInfo;
-import com.atguigu.gmall.model.product.BaseCategory1;
-import com.atguigu.gmall.model.product.BaseCategory2;
-import com.atguigu.gmall.model.product.BaseCategory3;
+import com.atguigu.gmall.model.product.*;
 
 import java.util.List;
 
@@ -30,4 +27,9 @@ public interface BaseManagerService {
      * 根据分类Id 获取平台属性集合
      */
     List<BaseAttrInfo> attrInfoList(Long category1Id, Long category2Id, Long category3Id);
+
+    /**
+     * 获取销售属性数据
+     */
+    List<BaseSaleAttr> getBaseSaleAttrList();
 }

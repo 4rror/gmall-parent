@@ -1,13 +1,7 @@
 package com.atguigu.gmall.product.service.impl;
 
-import com.atguigu.gmall.model.product.BaseAttrInfo;
-import com.atguigu.gmall.model.product.BaseCategory1;
-import com.atguigu.gmall.model.product.BaseCategory2;
-import com.atguigu.gmall.model.product.BaseCategory3;
-import com.atguigu.gmall.product.mapper.BaseAttrInfoMapper;
-import com.atguigu.gmall.product.mapper.BaseCategory1Mapper;
-import com.atguigu.gmall.product.mapper.BaseCategory2Mapper;
-import com.atguigu.gmall.product.mapper.BaseCategory3Mapper;
+import com.atguigu.gmall.model.product.*;
+import com.atguigu.gmall.product.mapper.*;
 import com.atguigu.gmall.product.service.BaseManagerService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +23,9 @@ public class BaseManagerServiceImpl implements BaseManagerService {
 
     @Autowired
     private BaseAttrInfoMapper baseAttrInfoMapper;
+
+    @Autowired
+    private BaseSaleAttrMapper baseSaleAttrMapper;
 
     @Override
     public List<BaseCategory1> getCategory1List() {
@@ -52,5 +49,10 @@ public class BaseManagerServiceImpl implements BaseManagerService {
     @Override
     public List<BaseAttrInfo> attrInfoList(Long category1Id, Long category2Id, Long category3Id) {
         return baseAttrInfoMapper.selectAttrInfoList(category1Id, category2Id, category3Id);
+    }
+
+    @Override
+    public List<BaseSaleAttr> getBaseSaleAttrList() {
+        return baseSaleAttrMapper.selectList(null);
     }
 }
