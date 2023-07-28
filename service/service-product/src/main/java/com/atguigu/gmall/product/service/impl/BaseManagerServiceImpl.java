@@ -6,8 +6,11 @@ import com.atguigu.gmall.product.service.BaseManagerService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class BaseManagerServiceImpl implements BaseManagerService {
@@ -26,6 +29,16 @@ public class BaseManagerServiceImpl implements BaseManagerService {
 
     @Autowired
     private BaseSaleAttrMapper baseSaleAttrMapper;
+
+    @Autowired
+    private SpuSaleAttrMapper spuSaleAttrMapper;
+
+    @Autowired
+    private SpuSaleAttrValueMapper spuSaleAttrValueMapper;
+
+    @Autowired
+    private SpuImageMapper spuImageMapper;
+
 
     @Override
     public List<BaseCategory1> getCategory1List() {
@@ -54,5 +67,36 @@ public class BaseManagerServiceImpl implements BaseManagerService {
     @Override
     public List<BaseSaleAttr> getBaseSaleAttrList() {
         return baseSaleAttrMapper.selectList(null);
+    }
+
+    @Override
+    public List<SpuSaleAttr> getSpuSaleAttrListBySpuId(Long spuId) {
+        // 查询spuSaleAttrList
+        List<SpuSaleAttr> spuSaleAttrList = spuSaleAttrMapper
+                .selectList(new LambdaQueryWrapper<SpuSaleAttr>().eq(SpuSaleAttr::getSpuId, spuId));
+        if (CollectionUtils.isEmpty(spuSaleAttrList)) return null;
+
+        // 查询spuSaleAttrValueList
+        List<SpuSaleAttrValue> spuSaleAttrValueList = spuSaleAttrValueMapper
+                .selectList(new LambdaQueryWrapper<SpuSaleAttrValue>().eq(SpuSaleAttrValue::getSpuId, spuId));
+        if (CollectionUtils.isEmpty(spuSaleAttrValueList)) return spuSaleAttrList;
+
+        // 设置销售属性值
+        spuSaleAttrList.forEach(spuSaleAttr -> {
+            List<SpuSaleAttrValue> collect =
+                    spuSaleAttrValueList
+                            .stream()
+                            .filter(spuSaleAttrValue ->
+                                    Objects.equals(spuSaleAttr.getSaleAttrName(), spuSaleAttrValue.getSaleAttrName()))
+                            .collect(Collectors.toList());
+            spuSaleAttr.setSpuSaleAttrValueList(collect);
+        });
+
+        return spuSaleAttrList;
+    }
+
+    @Override
+    public List<SpuImage> getSpuImageListBySpuId(Long spuId) {
+        return spuImageMapper.selectList(new LambdaQueryWrapper<SpuImage>().eq(SpuImage::getSpuId, spuId));
     }
 }

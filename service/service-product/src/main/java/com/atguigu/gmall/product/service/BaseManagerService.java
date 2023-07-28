@@ -32,4 +32,14 @@ public interface BaseManagerService {
      * 获取销售属性数据
      */
     List<BaseSaleAttr> getBaseSaleAttrList();
+
+    /**
+     * 根据spuId查询销售属性
+     */
+    List<SpuSaleAttr> getSpuSaleAttrListBySpuId(Long spuId);
+
+    /**
+     * 根据spuId获取spuImage集合
+     */
+    List<SpuImage> getSpuImageListBySpuId(Long spuId);
 }
