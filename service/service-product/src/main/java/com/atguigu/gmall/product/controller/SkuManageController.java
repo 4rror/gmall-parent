@@ -1,25 +1,36 @@
 package com.atguigu.gmall.product.controller;
 
 import com.atguigu.gmall.common.result.Result;
+import com.atguigu.gmall.model.product.SkuInfo;
 import com.atguigu.gmall.model.product.SpuImage;
 import com.atguigu.gmall.model.product.SpuSaleAttr;
 import com.atguigu.gmall.product.service.BaseManagerService;
+import com.atguigu.gmall.product.service.SkuInfoService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("admin/product")
+@RequestMapping("/admin/product")
 public class SkuManageController {
 
     @Autowired
     private BaseManagerService baseManagerService;
 
+    @Autowired
+    private SkuInfoService skuInfoService;
+
+    /**
+     * 保存SkuInfo
+     */
+    @ApiOperation("保存SkuInfo")
+    @PostMapping("/saveSkuInfo")
+    public Result<Object> saveSkuInfo(@RequestBody SkuInfo skuInfo) {
+        skuInfoService.saveSkuInfo(skuInfo);
+        return Result.ok();
+    }
 
     /**
      * 根据spuId获取spuImage集合
