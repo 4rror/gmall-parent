@@ -6,11 +6,8 @@ import com.atguigu.gmall.product.service.BaseManagerService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 public class BaseManagerServiceImpl implements BaseManagerService {
@@ -33,8 +30,8 @@ public class BaseManagerServiceImpl implements BaseManagerService {
     @Autowired
     private SpuSaleAttrMapper spuSaleAttrMapper;
 
-    @Autowired
-    private SpuSaleAttrValueMapper spuSaleAttrValueMapper;
+    // @Autowired
+    // private SpuSaleAttrValueMapper spuSaleAttrValueMapper;
 
     @Autowired
     private SpuImageMapper spuImageMapper;
