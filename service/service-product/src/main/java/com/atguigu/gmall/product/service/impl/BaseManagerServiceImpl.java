@@ -71,28 +71,28 @@ public class BaseManagerServiceImpl implements BaseManagerService {
 
     @Override
     public List<SpuSaleAttr> getSpuSaleAttrListBySpuId(Long spuId) {
-        // 查询spuSaleAttrList
-        List<SpuSaleAttr> spuSaleAttrList = spuSaleAttrMapper
-                .selectList(new LambdaQueryWrapper<SpuSaleAttr>().eq(SpuSaleAttr::getSpuId, spuId));
-        if (CollectionUtils.isEmpty(spuSaleAttrList)) return null;
+        // // 查询spuSaleAttrList
+        // List<SpuSaleAttr> spuSaleAttrList = spuSaleAttrMapper
+        //         .selectList(new LambdaQueryWrapper<SpuSaleAttr>().eq(SpuSaleAttr::getSpuId, spuId));
+        // if (CollectionUtils.isEmpty(spuSaleAttrList)) return null;
+        //
+        // // 查询spuSaleAttrValueList
+        // List<SpuSaleAttrValue> spuSaleAttrValueList = spuSaleAttrValueMapper
+        //         .selectList(new LambdaQueryWrapper<SpuSaleAttrValue>().eq(SpuSaleAttrValue::getSpuId, spuId));
+        // if (CollectionUtils.isEmpty(spuSaleAttrValueList)) return spuSaleAttrList;
+        //
+        // // 设置销售属性值
+        // spuSaleAttrList.forEach(spuSaleAttr -> {
+        //     List<SpuSaleAttrValue> collect =
+        //             spuSaleAttrValueList
+        //                     .stream()
+        //                     .filter(spuSaleAttrValue ->
+        //                             Objects.equals(spuSaleAttr.getSaleAttrName(), spuSaleAttrValue.getSaleAttrName()))
+        //                     .collect(Collectors.toList());
+        //     spuSaleAttr.setSpuSaleAttrValueList(collect);
+        // });
 
-        // 查询spuSaleAttrValueList
-        List<SpuSaleAttrValue> spuSaleAttrValueList = spuSaleAttrValueMapper
-                .selectList(new LambdaQueryWrapper<SpuSaleAttrValue>().eq(SpuSaleAttrValue::getSpuId, spuId));
-        if (CollectionUtils.isEmpty(spuSaleAttrValueList)) return spuSaleAttrList;
-
-        // 设置销售属性值
-        spuSaleAttrList.forEach(spuSaleAttr -> {
-            List<SpuSaleAttrValue> collect =
-                    spuSaleAttrValueList
-                            .stream()
-                            .filter(spuSaleAttrValue ->
-                                    Objects.equals(spuSaleAttr.getSaleAttrName(), spuSaleAttrValue.getSaleAttrName()))
-                            .collect(Collectors.toList());
-            spuSaleAttr.setSpuSaleAttrValueList(collect);
-        });
-
-        return spuSaleAttrList;
+        return spuSaleAttrMapper.selectSpuSaleAttrList(spuId);
     }
 
     @Override

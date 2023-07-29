@@ -71,7 +71,7 @@ public class SkuInfoServiceImpl implements SkuInfoService {
 
     @Override
     public IPage<SkuInfo> getSkuInfoPage(Long page, Long limit) {
-        IPage<SkuInfo> skuInfoPage = skuInfoMapper.selectPage(new Page<>(page, limit), null);
+        IPage<SkuInfo> skuInfoPage = skuInfoMapper.selectPage(new Page<>(page, limit), new LambdaQueryWrapper<SkuInfo>().orderByDesc(SkuInfo::getId));
 
         // 封装结果
         // List<SkuInfo> records = skuInfoPage.getRecords();

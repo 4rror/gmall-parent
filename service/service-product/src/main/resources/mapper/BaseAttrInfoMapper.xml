@@ -16,7 +16,7 @@
                bav.value_name,
                bav.attr_id
         from base_attr_info bai
-                 inner join base_attr_value bav on bai.id = bav.attr_id
+                 inner join base_attr_value bav on bai.id = bav.attr_id and bai.is_deleted = 0 and bav.is_deleted = 0
         <where>
             <if test="category1Id != null and category1Id != 0">
                 (bai.category_id = #{category1Id} and bai.category_level = 1)
@@ -28,6 +28,6 @@
                 or (bai.category_id = #{category3Id} and bai.category_level = 3)
             </if>
         </where>
-        order by bai.category_level, bai.id
+        order by bai.category_level, bai.id, bav.id
     </select>
 </mapper>
