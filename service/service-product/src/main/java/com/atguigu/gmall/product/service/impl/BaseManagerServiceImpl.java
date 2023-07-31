@@ -7,7 +7,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class BaseManagerServiceImpl implements BaseManagerService {
@@ -30,11 +33,23 @@ public class BaseManagerServiceImpl implements BaseManagerService {
     @Autowired
     private SpuSaleAttrMapper spuSaleAttrMapper;
 
+    @Autowired
+    private BaseCategoryViewMapper baseCategoryViewMapper;
+
+    @Autowired
+    private SkuInfoMapper skuInfoMapper;
+
+    @Autowired
+    private SkuSaleAttrValueMapper skuSaleAttrValueMapper;
+
     // @Autowired
     // private SpuSaleAttrValueMapper spuSaleAttrValueMapper;
 
     @Autowired
     private SpuImageMapper spuImageMapper;
+
+    @Autowired
+    private SpuPosterMapper spuPosterMapper;
 
 
     @Override
@@ -68,32 +83,42 @@ public class BaseManagerServiceImpl implements BaseManagerService {
 
     @Override
     public List<SpuSaleAttr> getSpuSaleAttrListBySpuId(Long spuId) {
-        // // 查询spuSaleAttrList
-        // List<SpuSaleAttr> spuSaleAttrList = spuSaleAttrMapper
-        //         .selectList(new LambdaQueryWrapper<SpuSaleAttr>().eq(SpuSaleAttr::getSpuId, spuId));
-        // if (CollectionUtils.isEmpty(spuSaleAttrList)) return null;
-        //
-        // // 查询spuSaleAttrValueList
-        // List<SpuSaleAttrValue> spuSaleAttrValueList = spuSaleAttrValueMapper
-        //         .selectList(new LambdaQueryWrapper<SpuSaleAttrValue>().eq(SpuSaleAttrValue::getSpuId, spuId));
-        // if (CollectionUtils.isEmpty(spuSaleAttrValueList)) return spuSaleAttrList;
-        //
-        // // 设置销售属性值
-        // spuSaleAttrList.forEach(spuSaleAttr -> {
-        //     List<SpuSaleAttrValue> collect =
-        //             spuSaleAttrValueList
-        //                     .stream()
-        //                     .filter(spuSaleAttrValue ->
-        //                             Objects.equals(spuSaleAttr.getSaleAttrName(), spuSaleAttrValue.getSaleAttrName()))
-        //                     .collect(Collectors.toList());
-        //     spuSaleAttr.setSpuSaleAttrValueList(collect);
-        // });
-
         return spuSaleAttrMapper.selectSpuSaleAttrList(spuId);
     }
 
     @Override
     public List<SpuImage> getSpuImageListBySpuId(Long spuId) {
         return spuImageMapper.selectList(new LambdaQueryWrapper<SpuImage>().eq(SpuImage::getSpuId, spuId));
+    }
+
+    @Override
+    public BaseCategoryView getCategoryView(Long category3Id) {
+        return baseCategoryViewMapper.selectCategoryView(category3Id);
+    }
+
+    @Override
+    public BigDecimal getSkuPrice(Long skuId) {
+        SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
+        if (skuInfo != null) return skuInfo.getPrice();
+        return new BigDecimal("0");
+    }
+
+    @Override
+    public List<SpuSaleAttr> getSpuSaleAttrListCheckBySku(Long skuId, Long spuId) {
+        return spuSaleAttrMapper.selectSpuSaleAttrListCheckBySku(skuId, spuId);
+    }
+
+    @Override
+    public Map<String, Long> getSkuValueIdsMap(Long spuId) {
+        List<Map<String, Long>> mapList = skuSaleAttrValueMapper.selectSkuValueIdsMap(spuId);
+
+        HashMap<String, Long> map = new HashMap<>();
+        mapList.forEach(i -> map.put(String.valueOf(i.get("value_ids")), i.get("sku_id")));
+        return map;
+    }
+
+    @Override
+    public List<SpuPoster> findSpuPosterBySpuId(Long spuId) {
+        return spuPosterMapper.selectList(new LambdaQueryWrapper<SpuPoster>().eq(SpuPoster::getSpuId, spuId));
     }
 }

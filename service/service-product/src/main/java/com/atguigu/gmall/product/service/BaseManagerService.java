@@ -2,7 +2,9 @@ package com.atguigu.gmall.product.service;
 
 import com.atguigu.gmall.model.product.*;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 public interface BaseManagerService {
 
@@ -42,4 +44,29 @@ public interface BaseManagerService {
      * 根据spuId获取spuImage集合
      */
     List<SpuImage> getSpuImageListBySpuId(Long spuId);
+
+    /**
+     * 根据三级分类id获取分类信息
+     */
+    BaseCategoryView getCategoryView(Long category3Id);
+
+    /**
+     * 根据skuId获取最新的商品价格
+     */
+    BigDecimal getSkuPrice(Long skuId);
+
+    /**
+     * 根据spuId, skuId获取销售属性集合
+     */
+    List<SpuSaleAttr> getSpuSaleAttrListCheckBySku(Long skuId, Long spuId);
+
+    /**
+     * 根据spuId获取到销售属性值Id与skuId组成的数据集
+     */
+    Map<String, Long> getSkuValueIdsMap(Long spuId);
+
+    /**
+     * 根据spuId获取海报数据
+     */
+    List<SpuPoster> findSpuPosterBySpuId(Long spuId);
 }

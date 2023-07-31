@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.atguigu.gmall.product.mapper.BaseCategoryViewMapper">
+    <!-- 创建视图语句 -->
+    <!--
+        create view base_category_view as
+        select bc3.id   as id,
+               bc1.id   as category1_id,
+               bc1.name as category1_name,
+               bc2.id   as category2_id,
+               bc2.name as category2_name,
+               bc3.id   as category3_id,
+               bc3.name as category3_name
+        from base_category1 bc1
+                 inner join base_category2 bc2 on bc1.id = bc2.category1_id
+                 inner join base_category3 bc3 on bc2.id = bc3.category2_id;
+     -->
+    <select id="selectCategoryView" resultType="com.atguigu.gmall.model.product.BaseCategoryView">
+        select id, category1_id, category1_name, category2_id, category2_name, category3_id, category3_name
+        from base_category_view
+        where id = #{category3Id}
+    </select>
+</mapper>

@@ -23,4 +23,9 @@ public interface SkuInfoService {
      * cancelSale
      */
     void cancelSale(Long skuId);
+
+    /**
+     * 根据skuId获取SkuInfo
+     */
+    SkuInfo getSkuInfoById(Long skuId);
 }

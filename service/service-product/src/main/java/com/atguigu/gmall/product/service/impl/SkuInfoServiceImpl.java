@@ -110,4 +110,15 @@ public class SkuInfoServiceImpl implements SkuInfoService {
         skuInfo.setIsSale(0);
         skuInfoMapper.updateById(skuInfo);
     }
+
+    @Override
+    public SkuInfo getSkuInfoById(Long skuId) {
+        SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
+        if (skuInfo == null) return null;
+
+        List<SkuImage> skuImageList = skuImageMapper.selectList(new LambdaQueryWrapper<SkuImage>().eq(SkuImage::getSkuId, skuId));
+        skuInfo.setSkuImageList(skuImageList);
+
+        return skuInfo;
+    }
 }

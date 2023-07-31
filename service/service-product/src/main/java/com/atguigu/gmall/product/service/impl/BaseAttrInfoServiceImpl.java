@@ -50,4 +50,9 @@ public class BaseAttrInfoServiceImpl implements BaseAttrInfoService {
             });
         }
     }
+
+    @Override
+    public List<BaseAttrInfo> getAttrList(Long skuId) {
+        return baseAttrInfoMapper.selectAttrList(skuId);
+    }
 }
