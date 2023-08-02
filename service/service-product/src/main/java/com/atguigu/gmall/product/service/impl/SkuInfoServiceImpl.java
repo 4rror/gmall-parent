@@ -14,6 +14,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.jetbrains.annotations.Nullable;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -43,6 +45,9 @@ public class SkuInfoServiceImpl implements SkuInfoService {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private RedissonClient redissonClient;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -123,10 +128,49 @@ public class SkuInfoServiceImpl implements SkuInfoService {
 
     @Override
     public SkuInfo getSkuInfoById(Long skuId) {
-        return getSkuInfoRedis(skuId);
+        return getSkuInfoRedisson(skuId);
     }
 
-    @Nullable
+    private SkuInfo getSkuInfoRedisson(Long skuId) {
+        try {
+            String key = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKUKEY_SUFFIX;
+            SkuInfo skuInfo = (SkuInfo) redisTemplate.opsForValue().get(key);
+            if (skuInfo == null) {
+                String lockKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKULOCK_SUFFIX;
+                RLock lock = redissonClient.getLock(lockKey);
+                // 尝试获取锁
+                boolean flag = lock.tryLock(RedisConst.SKULOCK_EXPIRE_PX1, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
+
+                if (flag) {
+                    // 获取到锁
+                    try {
+                        skuInfo = getSkuInfoDB(skuId);
+                        if (skuInfo == null) {
+                            skuInfo = new SkuInfo();
+                            redisTemplate.opsForValue().set(key, skuInfo, RedisConst.SKUKEY_TEMPORARY_TIMEOUT, TimeUnit.SECONDS);
+                        } else {
+                            redisTemplate.opsForValue().set(key, skuInfo, RedisConst.SKUKEY_TIMEOUT, TimeUnit.SECONDS);
+                        }
+                        return skuInfo;
+                    } finally {
+                        // 释放锁
+                        lock.unlock();
+                    }
+                } else {
+                    // 自旋
+                    Thread.sleep(50L);
+                    return getSkuInfoRedisson(skuId);
+                }
+            } else {
+                return skuInfo;
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return getSkuInfoDB(skuId);
+    }
+
     private SkuInfo getSkuInfoRedis(Long skuId) {
         try {
             String key = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKUKEY_SUFFIX;
@@ -139,30 +183,31 @@ public class SkuInfoServiceImpl implements SkuInfoService {
                 String lockValue = UUID.randomUUID().toString();
                 Boolean flag = redisTemplate.opsForValue().setIfAbsent(lockKey, lockValue, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
 
-                if (!flag) {
+                if (flag) {
+                    // 获取到锁
+                    try {
+                        // 查询数据库
+                        skuInfo = getSkuInfoDB(skuId);
+                        // 数据库没有数据时，设置，空键
+                        if (skuInfo == null) {
+                            redisTemplate.opsForValue().set(key, new SkuInfo(), RedisConst.SKUKEY_TEMPORARY_TIMEOUT, TimeUnit.SECONDS);
+                        } else {
+                            redisTemplate.opsForValue().set(key, skuInfo, RedisConst.SKUKEY_TIMEOUT, TimeUnit.SECONDS);
+                            return skuInfo;
+                        }
+                    } finally {
+                        // 释放锁
+                        String lua = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+                        DefaultRedisScript<Long> defaultRedisScript = new DefaultRedisScript<>();
+                        defaultRedisScript.setScriptText(lua);
+                        defaultRedisScript.setResultType(Long.class);
+                        redisTemplate.execute(defaultRedisScript, Collections.singletonList(lockKey), lockValue);
+                    }
+                } else {
                     Thread.sleep(50L);
-                    return getSkuInfoById(skuId);
+                    return getSkuInfoRedis(skuId);
                 }
 
-                // 获取到锁
-                try {
-                    // 查询数据库
-                    skuInfo = getSkuInfoDB(skuId);
-                    // 数据库没有数据时，设置，空键
-                    if (skuInfo == null) {
-                        redisTemplate.opsForValue().set(key, new SkuInfo(), RedisConst.SKUKEY_TEMPORARY_TIMEOUT, TimeUnit.SECONDS);
-                    } else {
-                        redisTemplate.opsForValue().set(key, skuInfo, RedisConst.SKUKEY_TIMEOUT, TimeUnit.SECONDS);
-                    }
-                    System.out.println(123);
-                } finally {
-                    // 释放锁
-                    String lua = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
-                    DefaultRedisScript<Long> defaultRedisScript = new DefaultRedisScript<>();
-                    defaultRedisScript.setScriptText(lua);
-                    defaultRedisScript.setResultType(Long.class);
-                    redisTemplate.execute(defaultRedisScript, Collections.singletonList(lockKey), lockValue);
-                }
             } else {
                 return skuInfo;
             }
