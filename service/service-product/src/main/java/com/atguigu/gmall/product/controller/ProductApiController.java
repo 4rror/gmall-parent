@@ -55,7 +55,7 @@ public class ProductApiController {
      */
     @ApiOperation("根据spuId获取到销售属性值Id与skuId组成的数据集")
     @GetMapping("/getSkuValueIdsMap/{spuId}")
-    public Map<String, Long> getSkuValueIdsMap(@PathVariable Long spuId) {
+    public Map getSkuValueIdsMap(@PathVariable Long spuId) {
         return baseManagerService.getSkuValueIdsMap(spuId);
     }
 

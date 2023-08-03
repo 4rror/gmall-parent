@@ -47,7 +47,7 @@ public class ItemServiceImpl implements ItemService {
         List<Map<String, String>> skuAttrList = attrList.stream().map((baseAttrInfo) -> {
             Map<String, String> attrMap = new HashMap<>();
             attrMap.put("attrName", baseAttrInfo.getAttrName());
-            attrMap.put("attrValue",         baseAttrInfo.getAttrValueList().get(0).getValueName());
+            attrMap.put("attrValue", baseAttrInfo.getAttrValueList().get(0).getValueName());
             return attrMap;
         }).collect(Collectors.toList());
 

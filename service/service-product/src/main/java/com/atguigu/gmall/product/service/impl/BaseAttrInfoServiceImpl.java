@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.service.impl;
 
+import com.atguigu.gmall.common.cache.GmallCache;
 import com.atguigu.gmall.model.product.BaseAttrInfo;
 import com.atguigu.gmall.model.product.BaseAttrValue;
 import com.atguigu.gmall.product.mapper.BaseAttrInfoMapper;
@@ -52,6 +53,7 @@ public class BaseAttrInfoServiceImpl implements BaseAttrInfoService {
     }
 
     @Override
+    @GmallCache(prefix = "attrList:", suffix = ":info")
     public List<BaseAttrInfo> getAttrList(Long skuId) {
         return baseAttrInfoMapper.selectAttrList(skuId);
     }

@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.service.impl;
 
+import com.atguigu.gmall.common.cache.GmallCache;
 import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.model.product.SkuAttrValue;
 import com.atguigu.gmall.model.product.SkuImage;
@@ -128,8 +129,9 @@ public class SkuInfoServiceImpl implements SkuInfoService {
     }
 
     @Override
+    @GmallCache(prefix = RedisConst.SKUKEY_PREFIX, suffix = RedisConst.SKUKEY_SUFFIX)
     public SkuInfo getSkuInfoById(Long skuId) {
-        return getSkuInfoRedisson(skuId);
+        return getSkuInfoDB(skuId);
     }
 
     private SkuInfo getSkuInfoRedisson(Long skuId) {

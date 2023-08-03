@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.service.impl;
 
+import com.atguigu.gmall.common.cache.GmallCache;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.mapper.*;
 import com.atguigu.gmall.product.service.BaseManagerService;
@@ -92,6 +93,7 @@ public class BaseManagerServiceImpl implements BaseManagerService {
     }
 
     @Override
+    @GmallCache(prefix = "categoryView:", suffix = ":info")
     public BaseCategoryView getCategoryView(Long category3Id) {
         return baseCategoryViewMapper.selectCategoryView(category3Id);
     }
@@ -104,11 +106,13 @@ public class BaseManagerServiceImpl implements BaseManagerService {
     }
 
     @Override
+    @GmallCache(prefix = "spuSaleAttrListCheckBySku:", suffix = ":info")
     public List<SpuSaleAttr> getSpuSaleAttrListCheckBySku(Long skuId, Long spuId) {
         return spuSaleAttrMapper.selectSpuSaleAttrListCheckBySku(skuId, spuId);
     }
 
     @Override
+    @GmallCache(prefix = "skuValueIdsMap:", suffix = ":info")
     public Map<String, Long> getSkuValueIdsMap(Long spuId) {
         List<Map<String, Long>> mapList = skuSaleAttrValueMapper.selectSkuValueIdsMap(spuId);
 
@@ -118,6 +122,7 @@ public class BaseManagerServiceImpl implements BaseManagerService {
     }
 
     @Override
+    @GmallCache(prefix = "spuPosterBySpuId:", suffix = ":info")
     public List<SpuPoster> findSpuPosterBySpuId(Long spuId) {
         return spuPosterMapper.selectList(new LambdaQueryWrapper<SpuPoster>().eq(SpuPoster::getSpuId, spuId));
     }
