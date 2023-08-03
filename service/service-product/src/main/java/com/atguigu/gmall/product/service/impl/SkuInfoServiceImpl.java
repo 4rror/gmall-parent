@@ -13,7 +13,7 @@ import com.atguigu.gmall.product.service.SkuInfoService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import org.jetbrains.annotations.Nullable;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service
 public class SkuInfoServiceImpl implements SkuInfoService {
 
@@ -142,6 +143,13 @@ public class SkuInfoServiceImpl implements SkuInfoService {
                 boolean flag = lock.tryLock(RedisConst.SKULOCK_EXPIRE_PX1, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
 
                 if (flag) {
+
+                    // 再次查询是否命中缓存
+                    skuInfo = (SkuInfo) redisTemplate.opsForValue().get(key);
+                    if (skuInfo != null) {
+                        return skuInfo;
+                    }
+
                     // 获取到锁
                     try {
                         skuInfo = getSkuInfoDB(skuId);
