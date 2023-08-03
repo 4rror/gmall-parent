@@ -140,35 +140,34 @@ public class SkuInfoServiceImpl implements SkuInfoService {
                 String lockKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKULOCK_SUFFIX;
                 RLock lock = redissonClient.getLock(lockKey);
                 // 尝试获取锁
-                boolean flag = lock.tryLock(RedisConst.SKULOCK_EXPIRE_PX1, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
-
-                if (flag) {
-
-                    // 再次查询是否命中缓存
-                    skuInfo = (SkuInfo) redisTemplate.opsForValue().get(key);
-                    if (skuInfo != null) {
-                        return skuInfo;
-                    }
-
-                    // 获取到锁
-                    try {
-                        skuInfo = getSkuInfoDB(skuId);
-                        if (skuInfo == null) {
-                            skuInfo = new SkuInfo();
-                            redisTemplate.opsForValue().set(key, skuInfo, RedisConst.SKUKEY_TEMPORARY_TIMEOUT, TimeUnit.SECONDS);
-                        } else {
-                            redisTemplate.opsForValue().set(key, skuInfo, RedisConst.SKUKEY_TIMEOUT, TimeUnit.SECONDS);
-                        }
-                        return skuInfo;
-                    } finally {
-                        // 释放锁
-                        lock.unlock();
-                    }
-                } else {
+                // boolean flag = lock.tryLock(RedisConst.SKULOCK_EXPIRE_PX1, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
+                // 自旋
+                while (!lock.tryLock(RedisConst.SKULOCK_EXPIRE_PX1, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS)) {
                     // 自旋
                     Thread.sleep(50L);
-                    return getSkuInfoRedisson(skuId);
                 }
+
+                // 再次查询是否命中缓存
+                skuInfo = (SkuInfo) redisTemplate.opsForValue().get(key);
+                if (skuInfo != null) {
+                    return skuInfo;
+                }
+
+                // 获取到锁
+                try {
+                    skuInfo = getSkuInfoDB(skuId);
+                    if (skuInfo == null) {
+                        skuInfo = new SkuInfo();
+                        redisTemplate.opsForValue().set(key, skuInfo, RedisConst.SKUKEY_TEMPORARY_TIMEOUT, TimeUnit.SECONDS);
+                    } else {
+                        redisTemplate.opsForValue().set(key, skuInfo, RedisConst.SKUKEY_TIMEOUT, TimeUnit.SECONDS);
+                    }
+                    return skuInfo;
+                } finally {
+                    // 释放锁
+                    lock.unlock();
+                }
+
             } else {
                 return skuInfo;
             }
