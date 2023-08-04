@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.model.product.*;
 
 import java.math.BigDecimal;
@@ -69,4 +70,9 @@ public interface BaseManagerService {
      * 根据spuId获取海报数据
      */
     List<SpuPoster> findSpuPosterBySpuId(Long spuId);
+
+    /**
+     * 获取全部分类信息
+     */
+    List<JSONObject> getBaseCategoryList();
 }

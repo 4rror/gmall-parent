@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.common.cache.GmallCache;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.mapper.*;
@@ -9,9 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class BaseManagerServiceImpl implements BaseManagerService {
@@ -125,5 +128,58 @@ public class BaseManagerServiceImpl implements BaseManagerService {
     @GmallCache(prefix = "spuPosterBySpuId:", suffix = ":info")
     public List<SpuPoster> findSpuPosterBySpuId(Long spuId) {
         return spuPosterMapper.selectList(new LambdaQueryWrapper<SpuPoster>().eq(SpuPoster::getSpuId, spuId));
+    }
+
+    @Override
+    @GmallCache(prefix = "categoryViewList:", suffix = ":info")
+    public List<JSONObject> getBaseCategoryList() {
+        List<BaseCategoryView> baseCategoryViewList = baseCategoryViewMapper.selectList(null);
+
+        // 分组遍历
+        Map<Long, List<BaseCategoryView>> baseCategory1List = baseCategoryViewList.stream().collect(Collectors.groupingBy(BaseCategoryView::getCategory1Id));
+
+        List<JSONObject> resultList = new ArrayList<>();
+
+        final int[] index = {1};
+        baseCategory1List.forEach((k1, v1) -> {
+            // 封装一级分类
+            JSONObject category1 = new JSONObject();
+            category1.put("index", index[0]);
+            category1.put("categoryId", k1);
+            category1.put("categoryName", v1.get(0).getCategory1Name());
+            // 变量迭代
+            index[0]++;
+
+            // 二级分类分组
+            Map<Long, List<BaseCategoryView>> baseCategory2List = v1.stream().collect(Collectors.groupingBy(BaseCategoryView::getCategory2Id));
+            List<JSONObject> category2Child = new ArrayList<>();
+            baseCategory2List.forEach((k2, v2) -> {
+                // 封装二级分类
+                JSONObject category2 = new JSONObject();
+                category2.put("categoryId", k2);
+                category2.put("categoryName", v2.get(0).getCategory2Name());
+
+                List<JSONObject> category3Child = new ArrayList<>();
+                v2.forEach(category3View -> {
+                    JSONObject category3 = new JSONObject();
+                    category3.put("categoryId", category3View.getCategory3Id());
+                    category3.put("categoryName", category3View.getCategory3Name());
+
+                    category3Child.add(category3);
+                });
+
+                category2.put("categoryChild", category3Child);
+
+                // 将二级分类的项添加到集合中
+                category2Child.add(category2);
+            });
+
+            // 将一级分类的子分类添加到返回数据中
+            category1.put("categoryChild", category2Child);
+
+            // 将一级分类添加到返回结果中
+            resultList.add(category1);
+        });
+        return resultList;
     }
 }
