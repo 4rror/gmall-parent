@@ -1,5 +1,6 @@
 package com.atguigu.gmall.list.service.impl;
 
+import com.atguigu.gmall.list.repository.GoodsRepository;
 import com.atguigu.gmall.list.service.SearchService;
 import com.atguigu.gmall.model.list.Goods;
 import com.atguigu.gmall.model.list.SearchAttr;
@@ -9,7 +10,6 @@ import com.atguigu.gmall.model.product.BaseTrademark;
 import com.atguigu.gmall.model.product.SkuInfo;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -25,7 +25,7 @@ public class SearchServiceImpl implements SearchService {
     private ProductFeignClient productFeignClient;
 
     @Autowired
-    private ElasticsearchRestTemplate elasticsearchRestTemplate;
+    private GoodsRepository goodsRepository;
 
     @Override
     public void upperGoods(Long skuId) {
@@ -76,6 +76,11 @@ public class SearchServiceImpl implements SearchService {
         }
 
         // 保存
-        elasticsearchRestTemplate.save(goods);
+        goodsRepository.save(goods);
+    }
+
+    @Override
+    public void lowerGoods(Long skuId) {
+        goodsRepository.deleteById(skuId);
     }
 }
