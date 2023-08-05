@@ -16,6 +16,13 @@ import java.util.Map;
 public interface ProductFeignClient {
 
     /**
+     * /admin/product/baseTrademark/get/{id}
+     * 根据品牌Id 获取品牌对象
+     */
+    @GetMapping("/admin/product/baseTrademark/get/{id}")
+    Result<BaseTrademark> getTrademarkById(@PathVariable Long id);
+
+    /**
      * /api/product/getBaseCategoryList
      * 获取全部分类信息
      */

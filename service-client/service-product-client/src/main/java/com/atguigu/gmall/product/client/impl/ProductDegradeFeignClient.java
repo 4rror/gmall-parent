@@ -13,6 +13,11 @@ import java.util.Map;
 @Component
 public class ProductDegradeFeignClient implements ProductFeignClient {
     @Override
+    public Result<BaseTrademark> getTrademarkById(Long id) {
+        return Result.fail();
+    }
+
+    @Override
     public Result<List<JSONObject>> getBaseCategoryList() {
         return Result.fail();
     }
