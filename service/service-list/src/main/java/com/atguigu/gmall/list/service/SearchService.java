@@ -10,4 +10,9 @@ public interface SearchService {
      * 商品从es下架
      */
     void lowerGoods(Long skuId);
+
+    /**
+     * 更新商品的热度排名
+     */
+    void incrHotScore(Long skuId);
 }

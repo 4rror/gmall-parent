@@ -2,6 +2,7 @@ package com.atguigu.gmall.item.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.item.service.ItemService;
+import com.atguigu.gmall.list.client.ListFeignClient;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Resource
     private ProductFeignClient productFeignClient;
+
+    @Resource
+    private ListFeignClient listFeignClient;
 
     @Autowired
     private ThreadPoolExecutor threadPoolExecutor;
@@ -82,6 +86,8 @@ public class ItemServiceImpl implements ItemService {
             map.put("price", skuPrice);
         }, threadPoolExecutor);
 
+        CompletableFuture<Void> incrHotScoreCompletableFuture = CompletableFuture.runAsync(() -> listFeignClient.incrHotScore(skuId), threadPoolExecutor);
+
         CompletableFuture.allOf(
                 skuInfoCompletableFuture,
                 categoryViewCompletableFuture,
@@ -89,7 +95,8 @@ public class ItemServiceImpl implements ItemService {
                 spuSaleAttrListCompletableFuture,
                 valuesSkuJsonCompletableFuture,
                 skuAttrListCompletableFuture,
-                skuPriceCompletableFuture
+                skuPriceCompletableFuture,
+                incrHotScoreCompletableFuture
         ).join();
 
         return map;

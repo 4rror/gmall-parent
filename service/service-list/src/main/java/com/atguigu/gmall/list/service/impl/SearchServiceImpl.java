@@ -10,12 +10,14 @@ import com.atguigu.gmall.model.product.BaseTrademark;
 import com.atguigu.gmall.model.product.SkuInfo;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +28,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private GoodsRepository goodsRepository;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public void upperGoods(Long skuId) {
@@ -82,5 +87,31 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public void lowerGoods(Long skuId) {
         goodsRepository.deleteById(skuId);
+    }
+
+    @Override
+    public void incrHotScore(Long skuId) {
+
+        // 定义key
+        String hotKey = "hotScore";
+        String hotValue = "skuId:" + skuId;
+        Double score = stringRedisTemplate.opsForZSet().incrementScore(hotKey, hotValue, 1L);
+
+        if (score % 10 == 0) {
+            // 从es中查询商品
+            Optional<Goods> goodsOptional = goodsRepository.findById(skuId);
+            if (goodsOptional.isPresent()) {
+                Goods goods = goodsOptional.get();
+                Long esHotScore = goods.getHotScore();
+                // 确认redis中的分数和es中的分数一致性
+                if (score < esHotScore) {
+                    stringRedisTemplate.opsForZSet().add(hotKey, hotValue, esHotScore + Math.round(score % 10));
+                } else {
+                    goods.setHotScore(Math.round(score));
+                    goodsRepository.save(goods);
+                }
+            }
+        }
+
     }
 }

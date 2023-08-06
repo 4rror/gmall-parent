@@ -22,6 +22,16 @@ public class ListApiController {
     private SearchService searchService;
 
     /**
+     * /api/list/inner/incrHotScore/{skuId}
+     * 更新商品的热度排名
+     */
+    @ApiOperation("更新商品的热度排名")
+    @GetMapping("/inner/incrHotScore/{skuId}")
+    public void incrHotScore(@PathVariable Long skuId) {
+        searchService.incrHotScore(skuId);
+    }
+
+    /**
      * /api/list/inner/lowerGoods/{skuId}
      * 商品从es下架
      */
