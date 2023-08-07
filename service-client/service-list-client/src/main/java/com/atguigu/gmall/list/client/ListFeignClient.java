@@ -1,6 +1,5 @@
 package com.atguigu.gmall.list.client;
 
-import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.list.client.impl.ListDegradeFeignClientImpl;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
