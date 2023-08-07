@@ -401,7 +401,7 @@ public class SearchServiceImpl implements SearchService {
                 "title",
                 "defaultImg",
                 "price"}, null);
-        System.out.println(searchSourceBuilder.toString());
+        // System.out.println(searchSourceBuilder.toString());
         // 设置条件构造器到请求对象
         searchRequest.source(searchSourceBuilder);
         return searchRequest;
