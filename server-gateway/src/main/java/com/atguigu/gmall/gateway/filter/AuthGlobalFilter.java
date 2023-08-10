@@ -33,7 +33,7 @@ public class AuthGlobalFilter implements GlobalFilter {
     private StringRedisTemplate stringRedisTemplate;
 
     // 匹配路径的工具类
-    private AntPathMatcher antPathMatcher = new AntPathMatcher();
+    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     @Value("${authUrls.url}")
     private String authUrls;
@@ -48,7 +48,7 @@ public class AuthGlobalFilter implements GlobalFilter {
         // 网关拦截不允许外部访问！
         if (antPathMatcher.match("/**/inner/**", path)) {
             ServerHttpResponse response = exchange.getResponse();
-            return out(response, ResultCodeEnum.PERMISSION);
+            return refuse(response, ResultCodeEnum.PERMISSION);
         }
         // 获取用户Id
         String userId = getUserId(request);
@@ -56,14 +56,14 @@ public class AuthGlobalFilter implements GlobalFilter {
         // token被盗用
         if ("-1".equals(userId)) {
             ServerHttpResponse response = exchange.getResponse();
-            return out(response, ResultCodeEnum.PERMISSION);
+            return refuse(response, ResultCodeEnum.PERMISSION);
         }
         // 用户登录认证
         // api接口，异步请求，校验用户必须登录
         if (antPathMatcher.match("/api/**/auth/**", path)) {
             if (StringUtils.isEmpty(userId)) {
                 ServerHttpResponse response = exchange.getResponse();
-                return out(response, ResultCodeEnum.LOGIN_AUTH);
+                return refuse(response, ResultCodeEnum.LOGIN_AUTH);
             }
         }
         // 验证url
@@ -85,11 +85,25 @@ public class AuthGlobalFilter implements GlobalFilter {
             // 将现在的request 变成 exchange对象
             return chain.filter(exchange.mutate().request(request).build());
         }
+
+        String userTempId = this.getUserTempId(request);
+
+        if (!StringUtils.isEmpty(userId) || !StringUtils.isEmpty(userTempId)) {
+            if (!StringUtils.isEmpty(userId)) {
+                request.mutate().header("userId", userId).build();
+            }
+            if (!StringUtils.isEmpty(userTempId)) {
+                request.mutate().header("userTempId", userTempId).build();
+            }
+            // 将现在的request 变成 exchange对象
+            return chain.filter(exchange.mutate().request(request).build());
+        }
+
         return chain.filter(exchange);
     }
 
     // 接口鉴权失败返回数据
-    private Mono<Void> out(ServerHttpResponse response, ResultCodeEnum resultCodeEnum) {
+    private Mono<Void> refuse(ServerHttpResponse response, ResultCodeEnum resultCodeEnum) {
         // 返回用户没有权限登录
         Result<Object> result = Result.build(null, resultCodeEnum);
         byte[] bits = JSONObject.toJSONString(result).getBytes(StandardCharsets.UTF_8);
@@ -129,5 +143,23 @@ public class AuthGlobalFilter implements GlobalFilter {
             }
         }
         return "";
+    }
+
+    /**
+     * 获取当前用户临时用户id
+     */
+    private String getUserTempId(ServerHttpRequest request) {
+        String userTempId = "";
+        List<String> tokenList = request.getHeaders().get("userTempId");
+        if (null != tokenList) {
+            userTempId = tokenList.get(0);
+        } else {
+            MultiValueMap<String, HttpCookie> cookieMultiValueMap = request.getCookies();
+            HttpCookie cookie = cookieMultiValueMap.getFirst("userTempId");
+            if (cookie != null) {
+                userTempId = URLDecoder.decode(cookie.getValue());
+            }
+        }
+        return userTempId;
     }
 }
