@@ -55,4 +55,9 @@ public class UserInfoServiceImpl implements UserInfoService {
         }
         return null;
     }
+
+    @Override
+    public void logout(HttpServletRequest request) {
+        stringRedisTemplate.delete(RedisConst.USER_LOGIN_KEY_PREFIX + request.getHeader("token"));
+    }
 }

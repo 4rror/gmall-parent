@@ -6,10 +6,7 @@ import com.atguigu.gmall.user.service.UserInfoService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
@@ -20,6 +17,17 @@ public class PassportApiController {
 
     @Autowired
     private UserInfoService userInfoService;
+
+    /**
+     * /api/user/passport/logout
+     * 退出登录
+     */
+    @ApiOperation("用户退出登录")
+    @GetMapping("/logout")
+    public Result<Object> logout(HttpServletRequest request) {
+        userInfoService.logout(request);
+        return Result.ok();
+    }
 
     /**
      * /api/user/passport/login
