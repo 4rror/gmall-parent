@@ -30,4 +30,12 @@ public interface CartService {
      * @param isChecked 是否被选中
      */
     void checkCart(String userId, Long skuId, Integer isChecked);
+
+    /**
+     * 删除购物车项
+     *
+     * @param userId 用户id
+     * @param skuId  商品id
+     */
+    void deleteCart(String userId, Long skuId);
 }

@@ -7,10 +7,7 @@ import com.atguigu.gmall.model.cart.CartInfo;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -21,6 +18,20 @@ public class CartController {
 
     @Autowired
     private CartService cartService;
+
+    /**
+     * /api/cart/deleteCart/{skuId}
+     * 删除购物车项
+     */
+    @ApiOperation("删除购物车项")
+    @DeleteMapping("/deleteCart/{skuId}")
+    public Result<Object> deleteCart(@PathVariable Long skuId, HttpServletRequest request) {
+        String userId = AuthContextHolder.getUserId(request);
+        if (StringUtils.isEmpty(userId))
+            userId = AuthContextHolder.getUserTempId(request);
+        cartService.deleteCart(userId, skuId);
+        return Result.ok();
+    }
 
     /**
      * /api/cart/checkCart/{skuId}/{isChecked}

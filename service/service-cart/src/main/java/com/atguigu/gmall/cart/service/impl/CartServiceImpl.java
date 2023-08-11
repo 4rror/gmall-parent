@@ -93,6 +93,16 @@ public class CartServiceImpl implements CartService {
         boundHashOps.put(String.valueOf(skuId), cartInfo);
     }
 
+    @Override
+    public void deleteCart(String userId, Long skuId) {
+        String cartKey = getCartKey(userId);
+
+        BoundHashOperations<String, Object, CartInfo> boundHashOps = redisTemplate.boundHashOps(cartKey);
+        if (boundHashOps.hasKey(String.valueOf(skuId))) {
+            boundHashOps.delete(String.valueOf(skuId));
+        }
+    }
+
     private String getCartKey(String userId) {
         return RedisConst.USER_KEY_PREFIX + userId + RedisConst.USER_CART_KEY_SUFFIX;
     }
