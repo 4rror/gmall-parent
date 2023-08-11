@@ -19,6 +19,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class CartServiceImpl implements CartService {
@@ -103,9 +104,26 @@ public class CartServiceImpl implements CartService {
         }
     }
 
+    @Override
+    public List<CartInfo> getCartCheckedList(String userId) {
+        String cartKey = getCartKey(userId);
+
+        BoundHashOperations<String, Object, CartInfo> boundHashOps = redisTemplate.boundHashOps(cartKey);
+        List<CartInfo> cartInfoList = boundHashOps.values();
+        if (CollectionUtils.isEmpty(cartInfoList)) return new ArrayList<>();
+
+        return cartInfoList.stream().filter(cartInfo -> {
+            if (cartInfo.getIsChecked() == 1) {
+                // 确认商品价格
+                BigDecimal skuPrice = productFeignClient.getSkuPrice(cartInfo.getSkuId());
+                cartInfo.setCartPrice(skuPrice);
+                return true;
+            }
+            return false;
+        }).collect(Collectors.toList());
+    }
+
     private String getCartKey(String userId) {
         return RedisConst.USER_KEY_PREFIX + userId + RedisConst.USER_CART_KEY_SUFFIX;
     }
-
-
 }

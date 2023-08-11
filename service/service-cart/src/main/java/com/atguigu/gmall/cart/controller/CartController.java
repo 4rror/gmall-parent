@@ -20,6 +20,16 @@ public class CartController {
     private CartService cartService;
 
     /**
+     * /api/cart/getCartCheckedList/{userId}
+     * 获取选中状态的购物车列表
+     */
+    @ApiOperation("获取选中状态的购物车列表")
+    @GetMapping("/getCartCheckedList/{userId}")
+    public List<CartInfo> getCartCheckedList(@PathVariable String userId) {
+        return cartService.getCartCheckedList(userId);
+    }
+
+    /**
      * /api/cart/deleteCart/{skuId}
      * 删除购物车项
      */

@@ -38,4 +38,12 @@ public interface CartService {
      * @param skuId  商品id
      */
     void deleteCart(String userId, Long skuId);
+
+    /**
+     * 获取选中状态的购物车列表
+     *
+     * @param userId 用户id
+     * @return 当前用户购物车中选中的项
+     */
+    List<CartInfo> getCartCheckedList(String userId);
 }
