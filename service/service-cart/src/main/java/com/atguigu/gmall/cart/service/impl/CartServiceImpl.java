@@ -72,18 +72,25 @@ public class CartServiceImpl implements CartService {
         String cartKey = getCartKey(userId);
         BoundHashOperations<String, String, CartInfo> boundHashOps = redisTemplate.boundHashOps(cartKey);
 
-        List<CartInfo> cartInfoList = new ArrayList<>();
-
-        if (Boolean.TRUE.equals(boundHashOps.hasKey(cartKey))) {
-            cartInfoList = boundHashOps.values();
-            if (!CollectionUtils.isEmpty(cartInfoList)) {
-                // 展示购物车时排序，使用更改时间排序
-                cartInfoList.sort((c1, c2) ->
-                        DateUtil.truncatedCompareTo(c1.getUpdateTime(), c2.getUpdateTime(), Calendar.SECOND)
-                );
-            }
+        List<CartInfo> cartInfoList = boundHashOps.values();
+        if (!CollectionUtils.isEmpty(cartInfoList)) {
+            // 展示购物车时排序，使用更改时间排序
+            cartInfoList.sort((c1, c2) ->
+                    DateUtil.truncatedCompareTo(c2.getUpdateTime(), c1.getUpdateTime(), Calendar.SECOND)
+            );
         }
         return cartInfoList;
+    }
+
+    @Override
+    public void checkCart(String userId, Long skuId, Integer isChecked) {
+        String cartKey = getCartKey(userId);
+
+        BoundHashOperations<String, Object, CartInfo> boundHashOps = redisTemplate.boundHashOps(cartKey);
+        CartInfo cartInfo = boundHashOps.get(String.valueOf(skuId));
+        if (cartInfo == null) return;
+        cartInfo.setIsChecked(isChecked);
+        boundHashOps.put(String.valueOf(skuId), cartInfo);
     }
 
     private String getCartKey(String userId) {

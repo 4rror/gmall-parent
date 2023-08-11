@@ -23,6 +23,20 @@ public class CartController {
     private CartService cartService;
 
     /**
+     * /api/cart/checkCart/{skuId}/{isChecked}
+     * 更新选中状态
+     */
+    @GetMapping("/checkCart/{skuId}/{isChecked}")
+    @ApiOperation("更新选中状态")
+    public Result<Object> checkCart(@PathVariable Long skuId, @PathVariable Integer isChecked, HttpServletRequest request) {
+        String userId = AuthContextHolder.getUserId(request);
+        if (StringUtils.isEmpty(userId))
+            userId = AuthContextHolder.getUserTempId(request);
+        cartService.checkCart(userId, skuId, isChecked);
+        return Result.ok();
+    }
+
+    /**
      * /api/cart/cartList
      * 查询购物车列表
      */
@@ -30,7 +44,7 @@ public class CartController {
     @GetMapping("/cartList")
     public Result<List<CartInfo>> cartList(HttpServletRequest request) {
         String userId = AuthContextHolder.getUserId(request);
-        if (userId == null)
+        if (StringUtils.isEmpty(userId))
             userId = AuthContextHolder.getUserTempId(request);
         List<CartInfo> cartInfoList = cartService.cartList(userId);
         return Result.ok(cartInfoList);
