@@ -40,7 +40,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         if (userInfoFromDb != null) {
             JSONObject jsonObject = new JSONObject();
             // 生成token
-            String token = UUID.randomUUID().toString().replaceAll("-", " ");
+            String token = UUID.randomUUID().toString().replaceAll("-", "");
             String ip = IpUtil.getIpAddress(request);
             jsonObject.put("ip", ip);
             jsonObject.put("userId", userInfoFromDb.getId());
