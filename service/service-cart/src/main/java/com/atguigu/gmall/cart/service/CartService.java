@@ -18,9 +18,10 @@ public interface CartService {
     /**
      * 查询购物车列表
      *
-     * @param userId 用户id
+     * @param userId     用户id
+     * @param userTempId 临时用户id
      */
-    List<CartInfo> cartList(String userId);
+    List<CartInfo> cartList(String userId, String userTempId);
 
     /**
      * 更新选中状态

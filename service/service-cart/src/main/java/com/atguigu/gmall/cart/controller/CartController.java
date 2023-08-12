@@ -65,9 +65,8 @@ public class CartController {
     @GetMapping("/cartList")
     public Result<List<CartInfo>> cartList(HttpServletRequest request) {
         String userId = AuthContextHolder.getUserId(request);
-        if (StringUtils.isEmpty(userId))
-            userId = AuthContextHolder.getUserTempId(request);
-        List<CartInfo> cartInfoList = cartService.cartList(userId);
+        String userTempId = AuthContextHolder.getUserTempId(request);
+        List<CartInfo> cartInfoList = cartService.cartList(userId, userTempId);
         return Result.ok(cartInfoList);
     }
 
