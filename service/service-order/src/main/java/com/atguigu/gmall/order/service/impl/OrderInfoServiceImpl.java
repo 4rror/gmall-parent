@@ -1,6 +1,7 @@
 package com.atguigu.gmall.order.service.impl;
 
 import com.atguigu.gmall.cart.client.CartFeignClient;
+import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.model.cart.CartInfo;
 import com.atguigu.gmall.model.enums.OrderStatus;
 import com.atguigu.gmall.model.enums.ProcessStatus;
@@ -12,12 +13,15 @@ import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderInfoService;
 import com.atguigu.gmall.user.client.UserFeignClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -35,6 +39,28 @@ public class OrderInfoServiceImpl implements OrderInfoService {
 
     @Autowired
     private OrderDetailMapper orderDetailMapper;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Override
+    public void deleteTradeNo(String userId) {
+        stringRedisTemplate.delete(getTradeKey(userId));
+    }
+
+    @Override
+    public String getTradeNo(String userId) {
+        String tradeNo = UUID.randomUUID().toString().replaceAll("-", "");
+        stringRedisTemplate.opsForValue().set(getTradeKey(userId), tradeNo, 1, TimeUnit.HOURS);
+        return tradeNo;
+    }
+
+    @Override
+    public boolean checkTradeNo(String userId, String tradeNo) {
+        String tradeNoFromRedis = stringRedisTemplate.opsForValue().get(getTradeKey(userId));
+        if (StringUtils.isEmpty(tradeNo)) return false;
+        return tradeNo.equals(tradeNoFromRedis);
+    }
 
     @Override
     public Map<String, Object> trade(String userId) {
@@ -70,8 +96,13 @@ public class OrderInfoServiceImpl implements OrderInfoService {
             // 计算数量
             map.put("totalNum", count.get());
         }
+        map.put("tradeNo", getTradeNo(userId));
 
         return map;
+    }
+
+    private String getTradeKey(String userId) {
+        return RedisConst.USER_KEY_PREFIX + userId + RedisConst.TRADENO_SUFFIX;
     }
 
     @Override

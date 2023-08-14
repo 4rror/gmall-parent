@@ -28,7 +28,19 @@ public class OrderApiController {
         // 获取用户id
         String userId = AuthContextHolder.getUserId(request);
         orderInfo.setUserId(Long.valueOf(userId));
+
+        // 提交订单前检验流水号
+        String tradeNo = request.getParameter("tradeNo");
+        boolean flag = orderInfoService.checkTradeNo(userId, tradeNo);
+        if (!flag) {
+            return Result.fail().message("订单重复提交");
+        }
+
         Long orderId = orderInfoService.submitOrder(orderInfo);
+
+        // 删除流水号
+        orderInfoService.deleteTradeNo(userId);
+
         return Result.ok(orderId);
     }
 
