@@ -1,7 +1,9 @@
 package com.atguigu.gmall.product.service.impl;
 
 import com.atguigu.gmall.common.cache.GmallCache;
+import com.atguigu.gmall.common.constant.MqConst;
 import com.atguigu.gmall.common.constant.RedisConst;
+import com.atguigu.gmall.common.service.RabbitService;
 import com.atguigu.gmall.model.product.SkuAttrValue;
 import com.atguigu.gmall.model.product.SkuImage;
 import com.atguigu.gmall.model.product.SkuInfo;
@@ -50,6 +52,9 @@ public class SkuInfoServiceImpl implements SkuInfoService {
 
     @Autowired
     private RedissonClient redissonClient;
+
+    @Autowired
+    private RabbitService rabbitService;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -117,6 +122,7 @@ public class SkuInfoServiceImpl implements SkuInfoService {
         skuInfo.setId(skuId);
         skuInfo.setIsSale(1);
         skuInfoMapper.updateById(skuInfo);
+        rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_GOODS, MqConst.ROUTING_GOODS_UPPER, skuId);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -126,6 +132,7 @@ public class SkuInfoServiceImpl implements SkuInfoService {
         skuInfo.setId(skuId);
         skuInfo.setIsSale(0);
         skuInfoMapper.updateById(skuInfo);
+        rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_GOODS, MqConst.ROUTING_GOODS_LOWER, skuId);
     }
 
     @Override

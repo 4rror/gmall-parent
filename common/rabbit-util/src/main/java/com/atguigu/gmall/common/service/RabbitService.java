@@ -26,13 +26,13 @@ public class RabbitService {
      * @param routingKey 路由键
      * @param message    消息
      */
-    public boolean sendMessage(String exchange, String routingKey, Object message) {
-        rabbitTemplate.convertAndSend(exchange, routingKey, message);
-        return true;
-    }
+    // public boolean sendMessage(String exchange, String routingKey, Object message) {
+    //     rabbitTemplate.convertAndSend(exchange, routingKey, message);
+    //     return true;
+    // }
 
     //  封装一个发送消息的方法
-    public Boolean sendMsg(String exchange, String routingKey, Object msg) {
+    public Boolean sendMessage(String exchange, String routingKey, Object msg) {
         //  将发送的消息 赋值到 自定义的实体类
         GmallCorrelationData gmallCorrelationData = new GmallCorrelationData();
         // 声明一个correlationId的变量
