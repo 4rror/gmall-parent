@@ -24,4 +24,9 @@ public interface OrderInfoService {
      * 提交订单
      */
     Long submitOrder(OrderInfo orderInfo);
+
+    /**
+     * 检验库存
+     */
+    boolean checkStock(Long skuId, Integer skuNum);
 }

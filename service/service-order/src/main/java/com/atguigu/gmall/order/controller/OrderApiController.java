@@ -2,6 +2,7 @@ package com.atguigu.gmall.order.controller;
 
 import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.common.util.AuthContextHolder;
+import com.atguigu.gmall.model.order.OrderDetail;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.service.OrderInfoService;
 import io.swagger.annotations.ApiOperation;
@@ -34,6 +35,15 @@ public class OrderApiController {
         boolean flag = orderInfoService.checkTradeNo(userId, tradeNo);
         if (!flag) {
             return Result.fail().message("订单重复提交");
+        }
+
+        // 库存检查
+        for (OrderDetail orderDetail : orderInfo.getOrderDetailList()) {
+            boolean hasStock = orderInfoService.checkStock(orderDetail.getSkuId(), orderDetail.getSkuNum());
+            if (!hasStock) {
+                // 处理
+                return Result.fail().message(orderDetail.getSkuName() + " 库存不足");
+            }
         }
 
         Long orderId = orderInfoService.submitOrder(orderInfo);

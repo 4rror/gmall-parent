@@ -2,6 +2,7 @@ package com.atguigu.gmall.order.service.impl;
 
 import com.atguigu.gmall.cart.client.CartFeignClient;
 import com.atguigu.gmall.common.constant.RedisConst;
+import com.atguigu.gmall.common.util.HttpClientUtil;
 import com.atguigu.gmall.model.cart.CartInfo;
 import com.atguigu.gmall.model.enums.OrderStatus;
 import com.atguigu.gmall.model.enums.ProcessStatus;
@@ -13,6 +14,7 @@ import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderInfoService;
 import com.atguigu.gmall.user.client.UserFeignClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +44,9 @@ public class OrderInfoServiceImpl implements OrderInfoService {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    @Value("${ware.url}")
+    private String stockUrl;
 
     @Override
     public void deleteTradeNo(String userId) {
@@ -142,5 +147,12 @@ public class OrderInfoServiceImpl implements OrderInfoService {
             orderDetailMapper.insert(orderDetail);
         });
         return orderInfo.getId();
+    }
+
+    @Override
+    public boolean checkStock(Long skuId, Integer skuNum) {
+        String url = stockUrl + "/hasStock?skuId=" + skuId + "&num=" + skuNum;
+        String result = HttpClientUtil.doGet(url);
+        return "1".equals(result);
     }
 }
