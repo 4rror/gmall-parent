@@ -9,6 +9,7 @@ import com.atguigu.gmall.model.order.OrderDetail;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.service.OrderInfoService;
 import com.atguigu.gmall.product.client.ProductFeignClient;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,19 @@ public class OrderApiController {
 
     @Autowired
     private ThreadPoolExecutor threadPoolExecutor;
+
+    /**
+     * /api/order/auth/{page}/{limit}
+     * 我的订单
+     */
+    @ApiOperation("我的订单")
+    @GetMapping("/auth/{page}/{limit}")
+    public Result<IPage<OrderInfo>> orderInfoPage(@PathVariable Long page, @PathVariable Integer limit, HttpServletRequest request) {
+        String userId = AuthContextHolder.getUserId(request);
+        IPage<OrderInfo> orderInfoIPage = orderInfoService.orderInfoPage(userId, page, limit);
+        return Result.ok(orderInfoIPage);
+    }
+
 
     /**
      * /api/order/auth/submitOrder

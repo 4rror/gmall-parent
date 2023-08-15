@@ -13,6 +13,8 @@ import com.atguigu.gmall.order.mapper.OrderDetailMapper;
 import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderInfoService;
 import com.atguigu.gmall.user.client.UserFeignClient;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -154,5 +156,18 @@ public class OrderInfoServiceImpl implements OrderInfoService {
         String url = stockUrl + "/hasStock?skuId=" + skuId + "&num=" + skuNum;
         String result = HttpClientUtil.doGet(url);
         return "1".equals(result);
+    }
+
+    @Override
+    public IPage<OrderInfo> orderInfoPage(String userId, Long page, Integer limit) {
+        Page<OrderInfo> orderInfoPage = new Page<>(page, limit);
+
+        IPage<OrderInfo> orderInfoIPage = orderInfoMapper.selectPageByUserId(userId, orderInfoPage);
+        List<OrderInfo> records = orderInfoIPage.getRecords();
+        records.forEach(orderInfo -> {
+            String orderStatus = orderInfo.getOrderStatus();
+            orderInfo.setOrderStatusName(OrderStatus.getStatusNameByStatus(orderStatus));
+        });
+        return orderInfoIPage;
     }
 }

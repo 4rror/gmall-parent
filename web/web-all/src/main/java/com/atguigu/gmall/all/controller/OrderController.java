@@ -15,6 +15,11 @@ public class OrderController {
     @Resource
     private OrderFeignClient orderFeignClient;
 
+    @GetMapping("/myOrder.html")
+    public String myOrder() {
+        return "order/myOrder";
+    }
+
     @GetMapping("/trade.html")
     public String trade(Model model) {
 

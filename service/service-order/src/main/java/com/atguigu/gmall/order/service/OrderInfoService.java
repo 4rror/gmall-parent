@@ -1,6 +1,7 @@
 package com.atguigu.gmall.order.service;
 
 import com.atguigu.gmall.model.order.OrderInfo;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 
 import java.util.Map;
 
@@ -29,4 +30,9 @@ public interface OrderInfoService {
      * 检验库存
      */
     boolean checkStock(Long skuId, Integer skuNum);
+
+    /**
+     * 根据用户id获取订单列表
+     */
+    IPage<OrderInfo> orderInfoPage(String userId, Long page, Integer limit);
 }
