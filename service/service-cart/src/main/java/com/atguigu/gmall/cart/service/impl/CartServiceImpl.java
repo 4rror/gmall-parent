@@ -161,7 +161,7 @@ public class CartServiceImpl implements CartService {
             if (cartInfo.getIsChecked() == 1) {
                 // 确认商品价格
                 BigDecimal skuPrice = productFeignClient.getSkuPrice(cartInfo.getSkuId());
-                cartInfo.setCartPrice(skuPrice);
+                cartInfo.setSkuPrice(skuPrice);
                 return true;
             }
             return false;
