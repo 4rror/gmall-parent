@@ -10,6 +10,7 @@ import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.service.OrderInfoService;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -17,8 +18,12 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @RestController
 @RequestMapping("/api/order")
@@ -35,6 +40,9 @@ public class OrderApiController {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private ThreadPoolExecutor threadPoolExecutor;
 
     /**
      * /api/order/auth/submitOrder
@@ -54,32 +62,47 @@ public class OrderApiController {
             return Result.fail().message("订单重复提交");
         }
 
+        List<String> errorList = new ArrayList<>();
+        List<CompletableFuture> completableFutureList = new ArrayList<>();
+
         for (OrderDetail orderDetail : orderInfo.getOrderDetailList()) {
-            // 库存检查
-            boolean hasStock = orderInfoService.checkStock(orderDetail.getSkuId(), orderDetail.getSkuNum());
-            if (!hasStock) {
-                // 处理
-                return Result.fail().message(orderDetail.getSkuName() + " 库存不足");
-            }
-
-            // 金额检查
-            BigDecimal skuPrice = productFeignClient.getSkuPrice(orderDetail.getSkuId());
-            if (orderDetail.getOrderPrice().compareTo(skuPrice) != 0) {
-                // 重新获取
-                List<CartInfo> cartCheckedList = cartFeignClient.getCartCheckedList(userId);
-                // 更新redis
-                for (CartInfo cartInfo : cartCheckedList) {
-                    redisTemplate.opsForHash().put(
-                            RedisConst.USER_KEY_PREFIX + userId + RedisConst.USER_CART_KEY_SUFFIX,
-                            cartInfo.getSkuId().toString(),
-                            cartInfo);
+            CompletableFuture<Void> checkStockCompletableFuture = CompletableFuture.runAsync(() -> {
+                // 库存检查
+                boolean hasStock = orderInfoService.checkStock(orderDetail.getSkuId(), orderDetail.getSkuNum());
+                if (!hasStock) {
+                    // 处理
+                    errorList.add(orderDetail.getSkuName() + " " + orderDetail.getSkuNum() + " 库存不足");
                 }
-                return Result.fail().message(orderDetail.getSkuName() + " 价格变动，请从购物车重新提交");
-            }
+            }, threadPoolExecutor);
+            completableFutureList.add(checkStockCompletableFuture);
 
+            CompletableFuture<Void> checkPriceCompletableFuture = CompletableFuture.runAsync(() -> {
+                // 金额检查
+                BigDecimal skuPrice = productFeignClient.getSkuPrice(orderDetail.getSkuId());
+                if (orderDetail.getOrderPrice().compareTo(skuPrice) != 0) {
+                    // 重新获取
+                    List<CartInfo> cartCheckedList = cartFeignClient.getCartCheckedList(userId);
+                    // 更新redis
+                    for (CartInfo cartInfo : cartCheckedList) {
+                        redisTemplate.opsForHash().put(
+                                RedisConst.USER_KEY_PREFIX + userId + RedisConst.USER_CART_KEY_SUFFIX,
+                                cartInfo.getSkuId().toString(),
+                                cartInfo);
+                    }
+                    errorList.add(orderDetail.getSkuName() + " 价格变动，请从购物车重新提交");
+                }
+            }, threadPoolExecutor);
+            completableFutureList.add(checkPriceCompletableFuture);
         }
 
+        // 异步编排
+        CompletableFuture.allOf(completableFutureList.toArray(new CompletableFuture[completableFutureList.size()])).join();
 
+        if (!errorList.isEmpty()) {
+            return Result.fail().message(StringUtils.join(errorList, "，"));
+        }
+
+        // 调用service保存
         Long orderId = orderInfoService.submitOrder(orderInfo);
 
         // 删除流水号
