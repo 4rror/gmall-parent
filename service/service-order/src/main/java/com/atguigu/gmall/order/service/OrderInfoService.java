@@ -1,5 +1,6 @@
 package com.atguigu.gmall.order.service;
 
+import com.atguigu.gmall.model.enums.PaymentStatus;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 
@@ -35,4 +36,14 @@ public interface OrderInfoService {
      * 根据用户id获取订单列表
      */
     IPage<OrderInfo> orderInfoPage(String userId, Long page, Integer limit);
+
+    /**
+     * 根据id查询OrderInfo
+     */
+    OrderInfo getOrderInfoById(Long orderId);
+
+    /**
+     * 订单潮超时理
+     */
+    void execExpireOrder(Long orderId);
 }

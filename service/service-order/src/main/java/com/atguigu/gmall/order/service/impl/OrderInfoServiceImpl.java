@@ -1,10 +1,14 @@
 package com.atguigu.gmall.order.service.impl;
 
 import com.atguigu.gmall.cart.client.CartFeignClient;
+import com.atguigu.gmall.common.constant.MqConst;
 import com.atguigu.gmall.common.constant.RedisConst;
+import com.atguigu.gmall.common.service.RabbitService;
 import com.atguigu.gmall.common.util.HttpClientUtil;
+import com.atguigu.gmall.model.base.BaseEntity;
 import com.atguigu.gmall.model.cart.CartInfo;
 import com.atguigu.gmall.model.enums.OrderStatus;
+import com.atguigu.gmall.model.enums.PaymentStatus;
 import com.atguigu.gmall.model.enums.ProcessStatus;
 import com.atguigu.gmall.model.order.OrderDetail;
 import com.atguigu.gmall.model.order.OrderInfo;
@@ -13,6 +17,9 @@ import com.atguigu.gmall.order.mapper.OrderDetailMapper;
 import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderInfoService;
 import com.atguigu.gmall.user.client.UserFeignClient;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +53,9 @@ public class OrderInfoServiceImpl implements OrderInfoService {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private RabbitService rabbitService;
 
     @Value("${ware.url}")
     private String stockUrl;
@@ -148,6 +158,10 @@ public class OrderInfoServiceImpl implements OrderInfoService {
             orderDetail.setOrderId(orderInfo.getId());
             orderDetailMapper.insert(orderDetail);
         });
+
+        // 发送延迟队列消息
+        rabbitService.sendDelayMessage(MqConst.EXCHANGE_DIRECT_ORDER_CANCEL, MqConst.ROUTING_ORDER_CANCEL, orderInfo.getId(), MqConst.DELAY_TIME);
+
         return orderInfo.getId();
     }
 
@@ -170,4 +184,35 @@ public class OrderInfoServiceImpl implements OrderInfoService {
         });
         return orderInfoIPage;
     }
+
+    @Override
+    public OrderInfo getOrderInfoById(Long orderId) {
+        LambdaQueryWrapper<OrderInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(OrderInfo::getId, orderId);
+        return orderInfoMapper.selectOne(queryWrapper);
+    }
+
+    @Override
+    public void execExpireOrder(Long orderId) {
+        updateOrderStatus(orderId, ProcessStatus.CLOSED);
+    }
+
+    /**
+     * 更新订单状态
+     *
+     * @param orderId       订单id
+     * @param processStatus 订单状态枚举
+     */
+    private void updateOrderStatus(Long orderId, ProcessStatus processStatus) {
+        // 创建修改内容
+        OrderInfo orderInfo = new OrderInfo();
+        orderInfo.setOrderStatus(processStatus.getOrderStatus().name());
+        orderInfo.setProcessStatus(processStatus.name());
+        // 设置条件对象
+        LambdaQueryWrapper<OrderInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(OrderInfo::getId, orderId);
+        // 执行修改
+        orderInfoMapper.update(orderInfo, queryWrapper);
+    }
+
 }
