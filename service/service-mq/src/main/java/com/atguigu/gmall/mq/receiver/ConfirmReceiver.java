@@ -1,6 +1,7 @@
 package com.atguigu.gmall.mq.receiver;
 
 import com.atguigu.gmall.mq.config.DeadLetterMqConfig;
+import com.atguigu.gmall.mq.config.DelayedMqConfig;
 import com.rabbitmq.client.Channel;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
