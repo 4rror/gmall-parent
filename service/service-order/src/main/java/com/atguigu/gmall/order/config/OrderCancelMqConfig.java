@@ -23,6 +23,7 @@ public class OrderCancelMqConfig {
     @Bean
     public CustomExchange delayExchange() {
         Map<String, Object> args = new HashMap<>();
+        args.put("x-delayed-type", "direct");
         return new CustomExchange(MqConst.EXCHANGE_DIRECT_ORDER_CANCEL, "x-delayed-message", true, false, args);
     }
 

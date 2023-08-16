@@ -46,6 +46,16 @@ public class OrderApiController {
     private ThreadPoolExecutor threadPoolExecutor;
 
     /**
+     * /api/order/auth/getOrderInfo/{orderId}
+     * 根据id查询订单详情
+     */
+    @GetMapping("/auth/getOrderInfo/{orderId}")
+    public Result<OrderInfo> getOrderInfo(@PathVariable Long orderId) {
+        OrderInfo orderInfo = orderInfoService.getOrderInfoById(orderId);
+        return Result.ok(orderInfo);
+    }
+
+    /**
      * /api/order/auth/{page}/{limit}
      * 我的订单
      */
