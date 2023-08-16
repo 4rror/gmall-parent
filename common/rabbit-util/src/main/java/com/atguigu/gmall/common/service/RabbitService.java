@@ -19,7 +19,7 @@ public class RabbitService {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
-    public boolean sendRelayMessage(String exchange, String routingKey, Object message, int delayTime) {
+    public boolean sendDelayMessage(String exchange, String routingKey, Object message, int delayTime) {
         //  将发送的消息 赋值到 自定义的实体类
         GmallCorrelationData gmallCorrelationData = new GmallCorrelationData();
         // 声明一个correlationId的变量

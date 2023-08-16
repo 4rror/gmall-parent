@@ -5,9 +5,6 @@ import com.atguigu.gmall.common.service.RabbitService;
 import com.atguigu.gmall.mq.config.DeadLetterMqConfig;
 import com.atguigu.gmall.mq.config.DelayedMqConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.AmqpException;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +30,7 @@ public class MqController {
     public Result<Object> sendDelay() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         System.out.println("send:"+sdf.format(new Date()));
-        rabbitService.sendRelayMessage(DelayedMqConfig.exchange_delay, DelayedMqConfig.routing_delay, sdf.format(new Date()), 10);
+        rabbitService.sendDelayMessage(DelayedMqConfig.exchange_delay, DelayedMqConfig.routing_delay, sdf.format(new Date()), 10);
 
         // this.rabbitTemplate.convertAndSend(DelayedMqConfig.exchange_delay, DelayedMqConfig.routing_delay, sdf.format(new Date()), new MessagePostProcessor() {
         //     @Override

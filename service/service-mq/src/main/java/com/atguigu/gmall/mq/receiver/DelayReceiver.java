@@ -33,13 +33,13 @@ public class DelayReceiver {
             // 如果设置成功，消费消息
             log.info("Receive queue_delay_1: {}. Delay receive: {}", sdf.format(new Date()), msg);
             // 消费成功后，更新redis
-            stringRedisTemplate.opsForValue().set("delay:" + messageId, "1");
+            stringRedisTemplate.opsForValue().set("delay:" + messageId, "1", 20, TimeUnit.SECONDS);
         } else {
             // 设置不成功，先判断redis中的值是否是未消费，未消费则消费
             String s = stringRedisTemplate.opsForValue().get("delay:" + messageId);
             if ("0".equals(s)) {
                 log.info("Receive queue_delay_1: {}. Delay receive: {}", sdf.format(new Date()), msg);
-                stringRedisTemplate.opsForValue().set("delay:" + messageId, "1");
+                stringRedisTemplate.opsForValue().set("delay:" + messageId, "1", 20, TimeUnit.SECONDS);
             }
         }
         channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
