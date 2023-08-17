@@ -197,13 +197,21 @@ public class OrderInfoServiceImpl implements OrderInfoService {
         updateOrderStatus(orderId, ProcessStatus.CLOSED);
     }
 
+    @Override
+    public OrderInfo getOrderInfoByOutTradeNo(String outTradeNo) {
+        QueryWrapper<OrderInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("out_trade_no", outTradeNo);
+        return orderInfoMapper.selectOne(queryWrapper);
+    }
+
     /**
      * 更新订单状态
      *
      * @param orderId       订单id
      * @param processStatus 订单状态枚举
      */
-    private void updateOrderStatus(Long orderId, ProcessStatus processStatus) {
+    @Override
+    public void updateOrderStatus(Long orderId, ProcessStatus processStatus) {
         // 创建修改内容
         OrderInfo orderInfo = new OrderInfo();
         orderInfo.setOrderStatus(processStatus.getOrderStatus().name());

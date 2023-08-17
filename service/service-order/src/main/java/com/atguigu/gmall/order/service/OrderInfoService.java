@@ -1,6 +1,7 @@
 package com.atguigu.gmall.order.service;
 
 import com.atguigu.gmall.model.enums.PaymentStatus;
+import com.atguigu.gmall.model.enums.ProcessStatus;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 
@@ -46,4 +47,14 @@ public interface OrderInfoService {
      * 订单潮超时理
      */
     void execExpireOrder(Long orderId);
+
+    /**
+     * 根据outTradeNo查询订单
+     */
+    OrderInfo getOrderInfoByOutTradeNo(String outTradeNo);
+
+    /**
+     * 修改订单
+     */
+    void updateOrderStatus(Long id, ProcessStatus processStatus);
 }
