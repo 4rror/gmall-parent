@@ -1,6 +1,8 @@
 package com.atguigu.gmall.payment.controller;
 
 import com.alipay.api.internal.util.AlipaySignature;
+import com.atguigu.gmall.common.result.Result;
+import com.atguigu.gmall.common.result.ResultCodeEnum;
 import com.atguigu.gmall.model.enums.PaymentType;
 import com.atguigu.gmall.model.payment.PaymentInfo;
 import com.atguigu.gmall.payment.config.AlipayClientConfig;
@@ -28,6 +30,21 @@ public class AlipayController {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    /**
+     * /api/payment/alipay/refund/{orderId}
+     * 退款接口实现
+     */
+    @GetMapping("/refund/{orderId}")
+    @ResponseBody
+    public Result<Object> refund(@PathVariable Long orderId) {
+        boolean flag = alipayService.refund(orderId);
+        // 判断
+        if (flag) {
+            return Result.ok();
+        }
+        return Result.build(null, ResultCodeEnum.FAIL);
+    }
 
     /**
      * 异步回调

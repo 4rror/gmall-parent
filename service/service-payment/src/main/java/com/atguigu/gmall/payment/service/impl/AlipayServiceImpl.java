@@ -5,18 +5,25 @@ import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
 import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.request.AlipayTradePagePayRequest;
+import com.alipay.api.request.AlipayTradeRefundRequest;
 import com.alipay.api.response.AlipayTradePagePayResponse;
+import com.alipay.api.response.AlipayTradeRefundResponse;
+import com.atguigu.gmall.model.enums.PaymentStatus;
+import com.atguigu.gmall.model.enums.PaymentType;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.model.payment.PaymentInfo;
 import com.atguigu.gmall.order.client.OrderFeignClient;
 import com.atguigu.gmall.payment.config.AlipayClientConfig;
 import com.atguigu.gmall.payment.service.AlipayService;
 import com.atguigu.gmall.payment.service.PaymentInfoService;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
+@Slf4j
 @Service
 public class AlipayServiceImpl implements AlipayService {
 
@@ -69,5 +76,42 @@ public class AlipayServiceImpl implements AlipayService {
             throw new RuntimeException(e);
         }
         return response.getBody();
+    }
+
+    @Override
+    @SneakyThrows
+    public boolean refund(Long orderId) {
+        // 查询交易记录
+        OrderInfo orderInfo = orderFeignClient.getOrderInfo(orderId).getData();
+        // 判断
+        if (orderInfo == null) {
+            return false;
+        }
+        // 创建请求对象
+        AlipayTradeRefundRequest request = new AlipayTradeRefundRequest();
+        JSONObject bizContent = new JSONObject();
+        bizContent.put("out_trade_no", orderInfo.getOutTradeNo());
+        bizContent.put("refund_amount", 0.01);
+
+        request.setBizContent(bizContent.toString());
+        // 执行请求
+        AlipayTradeRefundResponse response = alipayClient.execute(request);
+        if (response.isSuccess()) {
+            // 获取
+            String fundChange = response.getFundChange();
+            if ("Y".equals(fundChange)) {
+                log.info("退款成功");
+                // 关闭支付记录状态
+                PaymentInfo paymentInfo = new PaymentInfo();
+                paymentInfo.setPaymentStatus(PaymentStatus.CLOSED.name());
+                paymentInfoService.updatePaymentInfo(orderInfo.getOutTradeNo(), PaymentType.ALIPAY.name(), paymentInfo);
+                return true;
+            } else {
+                log.error("退款失败");
+            }
+        } else {
+            log.error("调用失败");
+        }
+        return false;
     }
 }
