@@ -89,7 +89,7 @@ public class MqProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
         //  判断
         if (retryCount >= 3) {
             //  不需要重试了
-            log.error("重试次数已到，发送消息失败:" + JSON.toJSONString(gmallCorrelationData));
+            log.error("重试次数已到，发送消息失败: {}", JSON.toJSONString(gmallCorrelationData));
         } else {
             //  变量更新
             retryCount += 1;

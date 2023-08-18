@@ -1,14 +1,13 @@
 package com.atguigu.gmall.order.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.cart.client.CartFeignClient;
 import com.atguigu.gmall.common.constant.MqConst;
 import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.common.service.RabbitService;
 import com.atguigu.gmall.common.util.HttpClientUtil;
-import com.atguigu.gmall.model.base.BaseEntity;
 import com.atguigu.gmall.model.cart.CartInfo;
 import com.atguigu.gmall.model.enums.OrderStatus;
-import com.atguigu.gmall.model.enums.PaymentStatus;
 import com.atguigu.gmall.model.enums.ProcessStatus;
 import com.atguigu.gmall.model.order.OrderDetail;
 import com.atguigu.gmall.model.order.OrderInfo;
@@ -19,7 +18,6 @@ import com.atguigu.gmall.order.service.OrderInfoService;
 import com.atguigu.gmall.user.client.UserFeignClient;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -189,7 +187,17 @@ public class OrderInfoServiceImpl implements OrderInfoService {
     public OrderInfo getOrderInfoById(Long orderId) {
         LambdaQueryWrapper<OrderInfo> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(OrderInfo::getId, orderId);
-        return orderInfoMapper.selectOne(queryWrapper);
+
+        OrderInfo orderInfo = orderInfoMapper.selectOne(queryWrapper);
+
+        // 设置OrderDetailList
+        LambdaQueryWrapper<OrderDetail> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderDetail::getOrderId, orderId);
+        List<OrderDetail> orderDetailList = orderDetailMapper.selectList(wrapper);
+
+        orderInfo.setOrderDetailList(orderDetailList);
+
+        return orderInfo;
     }
 
     @Override
@@ -221,6 +229,57 @@ public class OrderInfoServiceImpl implements OrderInfoService {
         queryWrapper.eq(OrderInfo::getId, orderId);
         // 执行修改
         orderInfoMapper.update(orderInfo, queryWrapper);
+    }
+
+    @Override
+    public void sendOrderStatus(Long orderId) {
+        // 更新订单状态
+        updateOrderStatus(orderId, ProcessStatus.NOTIFIED_WARE);
+
+        // 构造库存系统需要的json数据
+        String json = initWareOrder(orderId);
+
+        // 发送消息
+        rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_WARE_STOCK, MqConst.ROUTING_WARE_STOCK, json);
+    }
+
+    /**
+     * 构建json数据
+     */
+    private String initWareOrder(Long orderId) {
+        OrderInfo orderInfo = getOrderInfoById(orderId);
+
+        // 将订单对象转为map
+        Map<String, Object> map = initWareOrder(orderInfo);
+
+        return JSONObject.toJSONString(map);
+    }
+
+    private Map<String, Object> initWareOrder(OrderInfo orderInfo) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("orderId", orderInfo.getId());
+        map.put("consignee", orderInfo.getConsignee());
+        map.put("consigneeTel", orderInfo.getConsigneeTel());
+        map.put("orderComment", orderInfo.getOrderComment());
+        map.put("orderBody", orderInfo.getTradeBody());
+        map.put("deliveryAddress", orderInfo.getDeliveryAddress());
+        map.put("paymentWay", "1");
+
+        List<Object> details = null;
+        List<OrderDetail> orderDetailList = orderInfo.getOrderDetailList();
+        if (!CollectionUtils.isEmpty(orderDetailList)) {
+            details = orderDetailList.stream().map(orderDetail -> {
+                Map<String, Object> odMap = new HashMap<>();
+                odMap.put("skuId", orderDetail.getSkuId());
+                odMap.put("skuNum", orderDetail.getSkuNum());
+                odMap.put("skuName", orderDetail.getSkuName());
+                return odMap;
+            }).collect(Collectors.toList());
+        }
+
+        map.put("details", details);
+
+        return map;
     }
 
 }

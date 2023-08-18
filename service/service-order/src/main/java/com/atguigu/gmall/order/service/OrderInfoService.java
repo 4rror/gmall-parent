@@ -57,4 +57,11 @@ public interface OrderInfoService {
      * 修改订单
      */
     void updateOrderStatus(Long id, ProcessStatus processStatus);
+
+    /**
+     * 发送消息，通知仓库
+     *
+     * @param orderId 订单id
+     */
+    void sendOrderStatus(Long orderId);
 }
