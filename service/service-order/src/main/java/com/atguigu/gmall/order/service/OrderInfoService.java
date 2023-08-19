@@ -5,6 +5,7 @@ import com.atguigu.gmall.model.enums.ProcessStatus;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 
+import java.util.List;
 import java.util.Map;
 
 public interface OrderInfoService {
@@ -64,4 +65,20 @@ public interface OrderInfoService {
      * @param orderId 订单id
      */
     void sendOrderStatus(Long orderId);
+
+    /**
+     * 拆分订单
+     *
+     * @param orderId    需要拆分的订单id
+     * @param wareSkuMap 拆分规则
+     * @return 返回子订单列表
+     */
+    List<OrderInfo> orderSplit(String orderId, String wareSkuMap);
+
+    /**
+     *
+     * @param orderInfo
+     * @return
+     */
+    Map<String, Object> initWareOrder(OrderInfo orderInfo);
 }

@@ -1,5 +1,6 @@
 package com.atguigu.gmall.order.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.cart.client.CartFeignClient;
 import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.common.result.Result;
@@ -14,6 +15,7 @@ import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -46,9 +48,34 @@ public class OrderApiController {
     private ThreadPoolExecutor threadPoolExecutor;
 
     /**
+     * /api/order/orderSplit
+     * 拆分订单
+     */
+    @PostMapping("/orderSplit")
+    public String orderSplit(HttpServletRequest request) {
+        String orderId = request.getParameter("orderId");
+        String wareSkuMap = request.getParameter("wareSkuMap");
+
+        List<OrderInfo> subOrderInfoList = orderInfoService.orderSplit(orderId, wareSkuMap);
+
+        // 转换数据
+        List<Map<String, Object>> mapList = new ArrayList<>();
+
+        if (!CollectionUtils.isEmpty(subOrderInfoList)) {
+            subOrderInfoList.forEach(soi -> {
+                Map<String, Object> map = orderInfoService.initWareOrder(soi);
+                mapList.add(map);
+            });
+        }
+        String jsonString = JSONObject.toJSONString(mapList);
+        return jsonString;
+    }
+
+    /**
      * /api/order/auth/getOrderInfo/{orderId}
      * 根据id查询订单详情
      */
+    @ApiOperation("根据id查询订单详情")
     @GetMapping("/auth/getOrderInfo/{orderId}")
     public Result<OrderInfo> getOrderInfo(@PathVariable Long orderId) {
         OrderInfo orderInfo = orderInfoService.getOrderInfoById(orderId);

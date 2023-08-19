@@ -20,6 +20,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -243,6 +244,93 @@ public class OrderInfoServiceImpl implements OrderInfoService {
         rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_WARE_STOCK, MqConst.ROUTING_WARE_STOCK, json);
     }
 
+    /*
+     [
+       {
+         "wareId": "1",
+         "skuIds": [
+           "2",
+           "10"
+         ]
+       },
+       {
+         "wareId": "2",
+         "skuIds": [
+           "3"
+         ]
+       }
+     ]
+     */
+    @Override
+    public List<OrderInfo> orderSplit(String orderId, String wareSkuMap) {
+
+        // 获取原本订单
+        OrderInfo originOrderInfo = getOrderInfoById(Long.valueOf(orderId));
+        if (originOrderInfo == null) return null;
+        // 结果集
+        List<OrderInfo> orderInfoList = new ArrayList<>();
+
+        List<Map> wareSkuList = JSONObject.parseArray(wareSkuMap, Map.class);
+
+        wareSkuList.forEach(map -> {
+            String wareId = (String) map.get("wareId");
+
+            // 子订单
+            OrderInfo subOrderInfo = new OrderInfo();
+            // 拷贝对象
+            BeanUtils.copyProperties(originOrderInfo, subOrderInfo);
+            // id置空
+            subOrderInfo.setId(null);
+            // 设置仓库字段
+            subOrderInfo.setWareId(wareId);
+            // 获取父订单的orderDetailList
+            List<OrderDetail> originOrderDetailList = originOrderInfo.getOrderDetailList();
+            // 订单拆分的skuIds
+            List<String> skuIds = (List<String>) map.get("skuIds");
+            // 定义子订单的orderDetailList
+            List<OrderDetail> subOrderDetailList;
+
+            // 获取对应的orderDetail
+            subOrderDetailList = originOrderDetailList.stream().filter(
+                    orderDetail -> skuIds.contains(orderDetail.getSkuId().toString())
+            ).collect(Collectors.toList()).stream().collect(Collectors.toList());
+
+            // 为子订单设置详情列表
+            subOrderInfo.setOrderDetailList(subOrderDetailList);
+
+            // 设置总金额
+            subOrderInfo.sumTotalAmount();
+
+            // 保存订单详情
+            StringBuilder sb = new StringBuilder();
+            subOrderDetailList.forEach(sod -> {
+                sb.append(sod.getSkuName()).append(",");
+            });
+            if (sb.length() > 50) {
+                subOrderInfo.setTradeBody(sb.substring(0, 50));
+            } else {
+                subOrderInfo.setTradeBody(sb.toString());
+            }
+
+            // 保存订单
+            orderInfoMapper.insert(subOrderInfo);
+
+            // 保存明细
+            subOrderDetailList.forEach(sod -> {
+                sod.setOrderId(sod.getOrderId());
+                orderDetailMapper.insert(sod);
+            });
+
+            // 修改父订单状态
+            updateOrderStatus(originOrderInfo.getId(), ProcessStatus.SPLIT);
+
+            // 将子订单添加到列表
+            orderInfoList.add(subOrderInfo);
+        });
+
+        return orderInfoList;
+    }
+
     /**
      * 构建json数据
      */
@@ -255,7 +343,8 @@ public class OrderInfoServiceImpl implements OrderInfoService {
         return JSONObject.toJSONString(map);
     }
 
-    private Map<String, Object> initWareOrder(OrderInfo orderInfo) {
+    @Override
+    public Map<String, Object> initWareOrder(OrderInfo orderInfo) {
         Map<String, Object> map = new HashMap<>();
         map.put("orderId", orderInfo.getId());
         map.put("consignee", orderInfo.getConsignee());
@@ -263,7 +352,8 @@ public class OrderInfoServiceImpl implements OrderInfoService {
         map.put("orderComment", orderInfo.getOrderComment());
         map.put("orderBody", orderInfo.getTradeBody());
         map.put("deliveryAddress", orderInfo.getDeliveryAddress());
-        map.put("paymentWay", "1");
+        map.put("paymentWay", "2");
+        map.put("wareId", orderInfo.getWareId());
 
         List<Object> details = null;
         List<OrderDetail> orderDetailList = orderInfo.getOrderDetailList();
