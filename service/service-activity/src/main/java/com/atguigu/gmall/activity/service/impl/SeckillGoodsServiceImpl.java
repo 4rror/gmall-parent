@@ -1,5 +1,6 @@
 package com.atguigu.gmall.activity.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.activity.cache.CacheHelper;
 import com.atguigu.gmall.activity.mapper.SeckillGoodsMapper;
 import com.atguigu.gmall.activity.service.SeckillGoodsService;
@@ -13,6 +14,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +57,7 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
     public void importSeckillGoodsToRedis() {
         List<SeckillGoods> seckillGoodsList = selectSeckillableGoods();
         if (!CollectionUtils.isEmpty(seckillGoodsList)) {
-            BoundHashOperations<String, String, SeckillGoods> boundHashOperations = redisTemplate.boundHashOps(RedisConst.SECKILL_GOODS);
+            BoundHashOperations<String, String, Object> boundHashOperations = redisTemplate.boundHashOps(RedisConst.SECKILL_GOODS);
             for (SeckillGoods seckillGoods : seckillGoodsList) {
                 if (boundHashOperations.hasKey(seckillGoods.getId().toString())) {
                     continue;
@@ -63,7 +65,7 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
                 // 计算秒杀结束时间差
                 Long timeSubtract = DateUtil.getTimeSubtract(seckillGoods.getEndTime(), new Date());
                 // 存储到redis
-                boundHashOperations.put(seckillGoods.getId().toString(), seckillGoods);
+                boundHashOperations.put(seckillGoods.getId().toString(), JSONObject.toJSONString(seckillGoods));
                 // 设置过期时间
                 boundHashOperations.expire(timeSubtract, TimeUnit.SECONDS);
 
@@ -78,6 +80,17 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
                 redisTemplate.convertAndSend(RedisConst.SECKILL_STOCK_STATUS_PUBSUB, seckillGoods.getSkuId() + ":1");
             }
         }
+    }
+
+    @Override
+    public List<SeckillGoods> findAll() {
+        List values = redisTemplate.boundHashOps(RedisConst.SECKILL_GOODS).values();
+        List<SeckillGoods> list = new ArrayList<>();
+        values.forEach(o -> {
+            SeckillGoods seckillGoods = JSONObject.parseObject(o.toString(), SeckillGoods.class);
+            list.add(seckillGoods);
+        });
+        return list;
     }
 
     /**

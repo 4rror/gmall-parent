@@ -1,6 +1,7 @@
 package com.atguigu.gmall.common.service;
 
 import com.alibaba.fastjson.JSON;
+import com.atguigu.gmall.common.constant.MqConst;
 import com.atguigu.gmall.common.pojo.GmallCorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,7 @@ public class RabbitService {
         gmallCorrelationData.setDelayTime(delayTime);
 
         // 存储redis
-        stringRedisTemplate.opsForValue().set(correlationId, JSON.toJSONString(gmallCorrelationData), 10, TimeUnit.MINUTES);
+        stringRedisTemplate.opsForValue().set(MqConst.MQ_REDIS_PREFIX + correlationId, JSON.toJSONString(gmallCorrelationData), 10, TimeUnit.MINUTES);
 
         // 发送消息
         rabbitTemplate.convertAndSend(exchange, routingKey, message, msg -> {
@@ -63,7 +64,7 @@ public class RabbitService {
         gmallCorrelationData.setMessage(message);
 
         // 发送消息的时候，将这个gmallCorrelationData 对象放入缓存。
-        stringRedisTemplate.opsForValue().set(correlationId, JSON.toJSONString(gmallCorrelationData), 10, TimeUnit.MINUTES);
+        stringRedisTemplate.opsForValue().set(MqConst.MQ_REDIS_PREFIX + correlationId, JSON.toJSONString(gmallCorrelationData), 10, TimeUnit.MINUTES);
         //  调用发送消息方法
         // this.rabbitTemplate.convertAndSend(exchange, routingKey, message);
         this.rabbitTemplate.convertAndSend(exchange, routingKey, message, gmallCorrelationData);

@@ -1,6 +1,7 @@
 package com.atguigu.gmall.common.config;
 
 import com.alibaba.fastjson.JSON;
+import com.atguigu.gmall.common.constant.MqConst;
 import com.atguigu.gmall.common.pojo.GmallCorrelationData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -69,7 +70,7 @@ public class MqProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
         //  获取这个CorrelationData对象的Id  spring_returned_message_correlation
         String correlationDataId = (String) message.getMessageProperties().getHeaders().get("spring_returned_message_correlation");
         //  因为在发送消息的时候，已经将数据存储到缓存，通过 correlationDataId 来获取缓存的数据
-        String strJson = this.stringRedisTemplate.opsForValue().get(correlationDataId);
+        String strJson = this.stringRedisTemplate.opsForValue().get(MqConst.MQ_REDIS_PREFIX + correlationDataId);
         //  消息没有到队列的时候，则会调用重试发送方法
         GmallCorrelationData gmallCorrelationData = JSON.parseObject(strJson, GmallCorrelationData.class);
         //  调用方法  gmallCorrelationData 这对象中，至少的有，交换机，路由键，消息等内容.
@@ -98,7 +99,7 @@ public class MqProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
             log.info("重试次数：{}", retryCount);
 
             //  更新缓存中的数据
-            this.stringRedisTemplate.opsForValue().set(gmallCorrelationData.getId(), JSON.toJSONString(gmallCorrelationData), 10, TimeUnit.MINUTES);
+            this.stringRedisTemplate.opsForValue().set(MqConst.MQ_REDIS_PREFIX + gmallCorrelationData.getId(), JSON.toJSONString(gmallCorrelationData), 10, TimeUnit.MINUTES);
 
             if (gmallCorrelationData.isDelay()) {
                 this.rabbitTemplate.convertAndSend(gmallCorrelationData.getExchange(),

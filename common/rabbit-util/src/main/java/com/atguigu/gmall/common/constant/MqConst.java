@@ -79,5 +79,6 @@ public class MqConst {
     // 队列
     public static final String QUEUE_TASK_18 = "queue.task.18";
 
+    public static final String MQ_REDIS_PREFIX = "mq:";
 
 }
